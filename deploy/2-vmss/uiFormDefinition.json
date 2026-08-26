@@ -1,0 +1,145 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2021-09-09/uiFormDefinition.schema.json#",
+  "view": {
+    "kind": "Form",
+    "properties": {
+      "title": "CrowdStrike Falcon VMSS (from golden image)",
+      "steps": [
+        {
+          "name": "basics",
+          "label": "Basics",
+          "description": "Deploy a Flexible-orchestration VMSS from the golden image built in Step 1. The sensor is baked into the image (NO_START=1); each instance auto-starts it and registers a unique AID on first boot. Provide the local administrator credentials.",
+          "elements": [
+            {
+              "name": "resourceScope",
+              "type": "Microsoft.Common.ResourceScope",
+              "location": {
+                "label": "Region",
+                "toolTip": "Region for the VMSS, networking, and load balancer.",
+                "resourceTypes": [
+                  "Microsoft.Compute/virtualMachineScaleSets"
+                ]
+              }
+            },
+            {
+              "name": "adminUsername",
+              "type": "Microsoft.Common.TextBox",
+              "label": "Administrator username",
+              "defaultValue": "azureuser",
+              "toolTip": "Local administrator username for the VMSS instances.",
+              "constraints": {
+                "required": true,
+                "validations": [
+                  {
+                    "regex": "^[a-zA-Z0-9]{1,20}$",
+                    "message": "1-20 letters or numbers. Avoid reserved names like 'administrator'."
+                  }
+                ]
+              },
+              "visible": true
+            },
+            {
+              "name": "adminPassword",
+              "type": "Microsoft.Common.PasswordBox",
+              "label": {
+                "password": "Administrator password",
+                "confirmPassword": "Confirm password"
+              },
+              "toolTip": "Local administrator password. Azure Windows complexity: 12-123 chars incl. lowercase, uppercase, number, and a special character.",
+              "constraints": {
+                "required": true,
+                "regex": "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^a-zA-Z0-9]).{12,123}$",
+                "validationMessage": "12-123 characters, including lowercase, uppercase, a number, and a special character."
+              },
+              "options": {
+                "hideConfirmation": false
+              },
+              "visible": true
+            }
+          ]
+        },
+        {
+          "name": "vmssConfig",
+          "label": "VMSS configuration",
+          "elements": [
+            {
+              "name": "keyVaultName",
+              "type": "Microsoft.Common.TextBox",
+              "label": "Key Vault name",
+              "toolTip": "The Key Vault created by Step 1 (shown in Step 1's deployment outputs).",
+              "constraints": {
+                "required": true,
+                "validations": [
+                  {
+                    "regex": "^[a-zA-Z][a-zA-Z0-9-]{1,22}[a-zA-Z0-9]$",
+                    "message": "3-24 chars, start with a letter, alphanumeric/hyphen, no trailing hyphen."
+                  }
+                ]
+              },
+              "visible": true
+            },
+            {
+              "name": "imageVersion",
+              "type": "Microsoft.Common.TextBox",
+              "label": "Image version",
+              "defaultValue": "latest",
+              "toolTip": "Golden image version to deploy. Use 'latest' or pin an exact version.",
+              "constraints": {
+                "required": true,
+                "validations": [
+                  {
+                    "regex": "^(latest|[0-9]+\\.[0-9]+\\.[0-9]+)$",
+                    "message": "Use 'latest' or an exact version like 20348.5499.260809."
+                  }
+                ]
+              },
+              "visible": true
+            },
+            {
+              "name": "instanceCount",
+              "type": "Microsoft.Common.Slider",
+              "label": "Instance count",
+              "min": 1,
+              "max": 100,
+              "defaultValue": 2,
+              "showStepMarkers": false,
+              "toolTip": "Number of VM instances in the scale set.",
+              "constraints": {
+                "required": true
+              },
+              "visible": true
+            },
+            {
+              "name": "vmSize",
+              "type": "Microsoft.Compute.SizeSelector",
+              "label": "VM size",
+              "toolTip": "Size for the scale set instances.",
+              "recommendedSizes": [
+                "Standard_D2s_v3",
+                "Standard_D4s_v3",
+                "Standard_D2s_v5"
+              ],
+              "osPlatform": "Windows",
+              "count": "[steps('vmssConfig').instanceCount]",
+              "visible": true
+            }
+          ]
+        }
+      ]
+    },
+    "outputs": {
+      "kind": "ResourceGroup",
+      "resourceGroupId": "[steps('basics').resourceScope.resourceGroup.id]",
+      "location": "[steps('basics').resourceScope.location.name]",
+      "parameters": {
+        "location": "[steps('basics').resourceScope.location.name]",
+        "adminUsername": "[steps('basics').adminUsername]",
+        "adminPassword": "[steps('basics').adminPassword.password]",
+        "keyVaultName": "[steps('vmssConfig').keyVaultName]",
+        "imageVersion": "[steps('vmssConfig').imageVersion]",
+        "vmSku": "[steps('vmssConfig').vmSize]",
+        "instanceCount": "[int(steps('vmssConfig').instanceCount)]"
+      }
+    }
+  }
+}
