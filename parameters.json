@@ -1,0 +1,67 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "_comment": "EXAMPLE parameters. Do NOT put secrets here. Replace <placeholders> before use. CrowdStrike API/CID secrets live in Key Vault (see README), NOT in this file.",
+  "parameters": {
+    "location": {
+      "value": "eastus"
+    },
+    "environment": {
+      "value": "dev"
+    },
+    "projectName": {
+      "value": "crowdstrike"
+    },
+    "deploymentMode": {
+      "value": "complete"
+    },
+    "galleryName": {
+      "value": "crowdstrike_dev_gallery"
+    },
+    "imageDefinitionName": {
+      "value": "CrowdStrike-Windows-2022"
+    },
+    "imageVersion": {
+      "value": "1.0.0"
+    },
+    "targetImageVersion": {
+      "value": "latest"
+    },
+    "sourceImagePublisher": {
+      "value": "MicrosoftWindowsServer"
+    },
+    "sourceImageOffer": {
+      "value": "WindowsServer"
+    },
+    "sourceImageSku": {
+      "value": "2022-datacenter-g2"
+    },
+    "sourceImageVersion": {
+      "value": "latest"
+    },
+    "vmSku": {
+      "value": "Standard_D2s_v3"
+    },
+    "instanceCount": {
+      "value": 2
+    },
+    "adminUsername": {
+      "value": "azureuser"
+    },
+    "adminPassword": {
+      "value": "<REPLACE-WITH-A-SECURE-PASSWORD-OR-PASS-AT-DEPLOY-TIME>"
+    },
+    "keyVaultName": {
+      "value": "<your-key-vault-name>"
+    },
+    "vnetAddressPrefix": {
+      "value": "10.0.0.0/16"
+    },
+    "subnetAddressPrefix": {
+      "value": "10.0.1.0/24"
+    },
+    "rdpSourceIpRanges": {
+      "value": []
+    }
+  }
+}

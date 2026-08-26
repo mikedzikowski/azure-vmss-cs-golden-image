@@ -1,0 +1,17 @@
+# Local / editor
+.claude/
+.vscode/
+*.log
+
+# Compiled Bicep (optional: keep azuredeploy.json if you want the Deploy buttons to work)
+# Uncomment the next line if you do NOT want to commit compiled ARM JSON:
+# **/azuredeploy.json
+
+# Secrets / local parameter overrides — NEVER commit real values
+*.local.json
+parameters.*.local.json
+*.secret.json
+
+# OS
+.DS_Store
+Thumbs.db
