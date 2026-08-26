@@ -65,6 +65,22 @@ Use `imageVersion = latest` to pick up the newest published version, or pin an e
 
 ---
 
+## Guided portal forms (createUiDefinition)
+
+Each step ships a [`createUiDefinition.json`](deploy/) that renders a friendly, validated form instead of the auto-generated parameter list:
+
+- **Step 1** ([`deploy/1-golden-image/createUiDefinition.json`](deploy/1-golden-image/createUiDefinition.json)) — CrowdStrike **API Client ID / Secret** (Basics) and the **source image** Publisher / Offer / SKU / Version (a step).
+- **Step 2** ([`deploy/2-vmss/createUiDefinition.json`](deploy/2-vmss/createUiDefinition.json)) — local **admin username / password** (Basics) and **Key Vault name, image version, VM size, instance count** (a step).
+
+Each form's `outputs` map directly to the matching `azuredeploy.json` parameters.
+
+> The classic **Deploy to Azure** button renders the template's parameters directly and does **not** consume `createUiDefinition.json`. To use the guided form, do one of:
+> 1. **Preview / test** it in the [CreateUIDefinition Sandbox](https://portal.azure.com/#blade/Microsoft_Azure_CreateUIDef/SandboxBlade) — paste the file and click Preview.
+> 2. Package as an **Azure Managed Application** (Service Catalog definition = `mainTemplate.json` [the `azuredeploy.json`] + `createUiDefinition.json`, zipped).
+> 3. Publish a **Template Spec** with a portal form.
+
+---
+
 ## Prerequisites
 
 1. **Azure permissions.** Rights to create resources **and role assignments** (Owner, or Contributor + User Access Administrator) in the target resource group — both steps assign roles to managed identities.
@@ -167,8 +183,8 @@ modules/
   networking.bicep                # VNet / Subnet / NSG
   vmss.bicep                      # Flexible VMSS from the gallery image (Trusted Launch)
 deploy/
-  1-golden-image/                 # Button 1: self-contained (KV + gallery + AIB) + compiled azuredeploy.json
-  2-vmss/                         # Button 2: networking + VMSS + compiled azuredeploy.json
+  1-golden-image/                 # Button 1: self-contained (KV + gallery + AIB) + azuredeploy.json + createUiDefinition.json
+  2-vmss/                         # Button 2: networking + VMSS + azuredeploy.json + createUiDefinition.json
 scripts/
   Install-FalconGoldenImage.ps1   # Reference: sensor install (NO_START=1) used by AIB
   Update-FalconGoldenImage.ps1    # Reference: image update runbook
