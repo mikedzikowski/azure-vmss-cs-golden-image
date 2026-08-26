@@ -1,0 +1,152 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+  "handler": "Microsoft.Azure.CreateUIDef",
+  "version": "0.1.2-preview",
+  "parameters": {
+    "config": {
+      "isWizard": true,
+      "basics": {
+        "description": "Build a **Windows golden image** with the CrowdStrike Falcon sensor pre-installed (Azure Image Builder + Compute Gallery). Provide your Falcon **API Client ID/Secret** and the **source image** to build from. Secrets are stored in a Key Vault created by the deployment — nothing is written to disk.",
+        "location": {
+          "label": "Region",
+          "toolTip": "Region for the gallery, image, Key Vault, and Image Builder template.",
+          "resourceTypes": [
+            "Microsoft.Compute/galleries",
+            "Microsoft.VirtualMachineImages/imageTemplates",
+            "Microsoft.KeyVault/vaults"
+          ]
+        }
+      }
+    },
+    "basics": [
+      {
+        "name": "falconClientId",
+        "type": "Microsoft.Common.TextBox",
+        "label": "CrowdStrike API Client ID",
+        "toolTip": "Falcon OAuth2 API client id. The client needs Sensor Download (read) and Sensor Update Policies (read) scopes.",
+        "constraints": {
+          "required": true,
+          "validations": [
+            {
+              "regex": "^[0-9a-fA-F]{32}$",
+              "message": "Client ID is a 32-character hexadecimal string."
+            }
+          ]
+        },
+        "visible": true
+      },
+      {
+        "name": "falconClientSecret",
+        "type": "Microsoft.Common.PasswordBox",
+        "label": {
+          "password": "CrowdStrike API Client Secret",
+          "confirmPassword": "Confirm Client Secret"
+        },
+        "toolTip": "Falcon OAuth2 API client secret. Stored as a secret in the Key Vault created by this deployment.",
+        "constraints": {
+          "required": true,
+          "regex": "^[a-zA-Z0-9]{32,}$",
+          "validationMessage": "Enter the API client secret (letters and numbers, 32+ characters)."
+        },
+        "options": {
+          "hideConfirmation": true
+        },
+        "visible": true
+      }
+    ],
+    "steps": [
+      {
+        "name": "sourceImage",
+        "label": "Source image",
+        "elements": [
+          {
+            "name": "sourceImageInfo",
+            "type": "Microsoft.Common.InfoBox",
+            "visible": true,
+            "options": {
+              "icon": "Info",
+              "text": "The base Windows image the golden image is built from. It must be a Gen2 / Trusted Launch capable SKU. Defaults target Windows Server 2022 Datacenter (Gen2)."
+            }
+          },
+          {
+            "name": "sourceImagePublisher",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Publisher",
+            "defaultValue": "MicrosoftWindowsServer",
+            "toolTip": "Marketplace image publisher, e.g. MicrosoftWindowsServer.",
+            "constraints": {
+              "required": true,
+              "validations": [
+                {
+                  "regex": "^[^\\s]{2,}$",
+                  "message": "Enter a publisher name (no spaces)."
+                }
+              ]
+            },
+            "visible": true
+          },
+          {
+            "name": "sourceImageOffer",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Offer",
+            "defaultValue": "WindowsServer",
+            "toolTip": "Marketplace image offer, e.g. WindowsServer.",
+            "constraints": {
+              "required": true,
+              "validations": [
+                {
+                  "regex": "^[^\\s]{2,}$",
+                  "message": "Enter an offer name (no spaces)."
+                }
+              ]
+            },
+            "visible": true
+          },
+          {
+            "name": "sourceImageSku",
+            "type": "Microsoft.Common.TextBox",
+            "label": "SKU",
+            "defaultValue": "2022-datacenter-g2",
+            "toolTip": "Marketplace image SKU. Must be Gen2 / Trusted Launch capable (typically ends in -g2), e.g. 2022-datacenter-g2.",
+            "constraints": {
+              "required": true,
+              "validations": [
+                {
+                  "regex": "^[^\\s]{2,}$",
+                  "message": "Enter a SKU (no spaces)."
+                }
+              ]
+            },
+            "visible": true
+          },
+          {
+            "name": "sourceImageVersion",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Version",
+            "defaultValue": "latest",
+            "toolTip": "Source image version, e.g. latest or an exact version like 20348.x.x.",
+            "constraints": {
+              "required": true,
+              "validations": [
+                {
+                  "regex": "^(latest|[0-9]+\\.[0-9]+\\.[0-9]+)$",
+                  "message": "Use 'latest' or an exact version like 20348.2402.240607."
+                }
+              ]
+            },
+            "visible": true
+          }
+        ]
+      }
+    ],
+    "outputs": {
+      "location": "[location()]",
+      "falconClientId": "[basics('falconClientId')]",
+      "falconClientSecret": "[basics('falconClientSecret').password]",
+      "sourceImagePublisher": "[steps('sourceImage').sourceImagePublisher]",
+      "sourceImageOffer": "[steps('sourceImage').sourceImageOffer]",
+      "sourceImageSku": "[steps('sourceImage').sourceImageSku]",
+      "sourceImageVersion": "[steps('sourceImage').sourceImageVersion]"
+    }
+  }
+}
