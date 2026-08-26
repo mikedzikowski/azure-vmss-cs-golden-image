@@ -41,6 +41,10 @@ param falconClientSecret string
 @allowed(['us-1', 'us-2', 'eu-1', 'us-gov-1'])
 param falconCloud string = 'us-1'
 
+@description('Optional: explicit CrowdStrike Customer ID (CID) with checksum. Leave empty to have the build retrieve the CCID automatically from the Falcon API.')
+@secure()
+param falconCid string = ''
+
 @description('Optional: Windows Sensor Update Policy name that resolves the sensor version. Leave empty for platform_default.')
 param sensorUpdatePolicyName string = ''
 
@@ -89,6 +93,7 @@ module keyVault '../../modules/keyVault.bicep' = {
     falconClientId: falconClientId
     falconClientSecret: falconClientSecret
     falconCloud: falconCloud
+    falconCid: falconCid
     sensorUpdatePolicyName: sensorUpdatePolicyName
     provToken: provToken
   }

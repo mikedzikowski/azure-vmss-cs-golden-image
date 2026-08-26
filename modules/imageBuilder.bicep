@@ -129,6 +129,16 @@ try {
         $provToken = $null
     }
 
+    # Optional: explicit CID. If provided, it is used directly (script skips the API CCID
+    # lookup). If absent, the install script retrieves the CCID from the Falcon API.
+    try {
+        $cidResponse = Invoke-RestMethod -Uri "$keyVaultUrl/secrets/crowdstrike-cid?api-version=7.4" -Method Get -Headers $headers -UseBasicParsing
+        $falconCid = $cidResponse.value
+    } catch {
+        Write-Output "No explicit CID in Key Vault, the installer will retrieve the CCID from the API"
+        $falconCid = $null
+    }
+
     Write-Output "Successfully retrieved CrowdStrike credentials"
 
     # Download CrowdStrike PowerShell installation script
@@ -165,6 +175,12 @@ try {
     if ($provToken) {
         $installParams['ProvToken'] = $provToken
         Write-Output "Using provisioning token for installation"
+    }
+
+    # Use an explicit CID if one was supplied (otherwise the script fetches the CCID).
+    if ($falconCid) {
+        $installParams['FalconCid'] = $falconCid
+        Write-Output "Using explicitly provided CID for installation"
     }
 
     Write-Output "Installing CrowdStrike Falcon sensor with NO_START=1..."

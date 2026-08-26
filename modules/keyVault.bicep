@@ -39,6 +39,10 @@ param sensorUpdatePolicyName string = ''
 @secure()
 param provToken string = ''
 
+@description('Optional: explicit CrowdStrike Customer ID (CID) with checksum. Leave empty to have the build retrieve the CCID from the Falcon API automatically.')
+@secure()
+param falconCid string = ''
+
 // RBAC-authorization Key Vault. enabledForTemplateDeployment is not required for the
 // AIB data-plane read pattern used here.
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
@@ -96,6 +100,14 @@ resource secretProvToken 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!e
   name: 'crowdstrike-prov-token'
   properties: {
     value: provToken
+  }
+}
+
+resource secretCid 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = if (!empty(falconCid)) {
+  parent: keyVault
+  name: 'crowdstrike-cid'
+  properties: {
+    value: falconCid
   }
 }
 
