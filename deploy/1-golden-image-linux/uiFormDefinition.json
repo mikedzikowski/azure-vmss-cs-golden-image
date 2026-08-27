@@ -110,7 +110,6 @@
             {
               "name": "offersApi",
               "type": "Microsoft.Solutions.ArmApiControl",
-              "condition": "[not(empty(steps('sourceImage').sourceImagePublisher))]",
               "request": {
                 "method": "GET",
                 "path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/locations/', steps('basics').resourceScope.location.name, '/publishers/', steps('sourceImage').sourceImagePublisher, '/artifacttypes/vmimage/offers?api-version=2023-07-01')]"
@@ -120,7 +119,7 @@
               "name": "sourceImageOffer",
               "type": "Microsoft.Common.DropDown",
               "label": "Offer",
-              "defaultValue": "[first(map(filter(steps('sourceImage').offersApi, (item) => contains(item.name, 'ubuntu-server-jammy')), (item) => item.name))]",
+              "defaultValue": "[coalesce(first(map(filter(steps('sourceImage').offersApi, (item) => contains(item.name, 'ubuntu-server-jammy')), (item) => item.name)), first(map(steps('sourceImage').offersApi, (item) => item.name)))]",
               "filter": true,
               "toolTip": "Marketplace image offer for the selected publisher (pulled live from Azure).",
               "constraints": {
@@ -132,7 +131,6 @@
             {
               "name": "skusApi",
               "type": "Microsoft.Solutions.ArmApiControl",
-              "condition": "[not(empty(steps('sourceImage').sourceImageOffer))]",
               "request": {
                 "method": "GET",
                 "path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/locations/', steps('basics').resourceScope.location.name, '/publishers/', steps('sourceImage').sourceImagePublisher, '/artifacttypes/vmimage/offers/', steps('sourceImage').sourceImageOffer, '/skus?api-version=2023-07-01')]"
@@ -142,7 +140,7 @@
               "name": "sourceImageSku",
               "type": "Microsoft.Common.DropDown",
               "label": "SKU",
-              "defaultValue": "[first(map(filter(steps('sourceImage').skusApi, (item) => contains(item.name, 'gen2')), (item) => item.name))]",
+              "defaultValue": "[coalesce(first(map(filter(steps('sourceImage').skusApi, (item) => contains(item.name, 'gen2')), (item) => item.name)), first(map(steps('sourceImage').skusApi, (item) => item.name)))]",
               "filter": true,
               "toolTip": "Linux SKU for the selected offer (pulled live from Azure). Only Gen2 / Trusted Launch capable SKUs are listed (the golden image is Gen2), e.g. 22_04-lts-gen2.",
               "constraints": {
@@ -154,7 +152,6 @@
             {
               "name": "versionsApi",
               "type": "Microsoft.Solutions.ArmApiControl",
-              "condition": "[not(empty(steps('sourceImage').sourceImageSku))]",
               "request": {
                 "method": "GET",
                 "path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/locations/', steps('basics').resourceScope.location.name, '/publishers/', steps('sourceImage').sourceImagePublisher, '/artifacttypes/vmimage/offers/', steps('sourceImage').sourceImageOffer, '/skus/', steps('sourceImage').sourceImageSku, '/versions?api-version=2023-07-01')]"
@@ -164,7 +161,7 @@
               "name": "sourceImageVersion",
               "type": "Microsoft.Common.DropDown",
               "label": "Version",
-              "defaultValue": "[first(map(steps('sourceImage').versionsApi, (item) => item.name))]",
+              "defaultValue": "[last(map(steps('sourceImage').versionsApi, (item) => item.name))]",
               "filter": true,
               "toolTip": "Source image version for the selected SKU (pulled live from Azure). Pick a concrete version to pin the build.",
               "constraints": {
