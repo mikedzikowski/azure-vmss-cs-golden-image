@@ -25,6 +25,10 @@ param galleryName string
 @description('Image definition name')
 param imageDefinitionName string
 
+@description('OS type for the image definition (Windows or Linux).')
+@allowed(['Windows', 'Linux'])
+param osType string = 'Windows'
+
 @description('Source image publisher')
 param sourceImagePublisher string
 
@@ -64,8 +68,8 @@ resource imageDefinition 'Microsoft.Compute/galleries/images@2023-07-03' = {
   location: location
   tags: tags
   properties: {
-    description: 'Windows Server golden image with the CrowdStrike Falcon sensor pre-installed'
-    osType: 'Windows'
+    description: '${osType} golden image with the CrowdStrike Falcon sensor pre-installed'
+    osType: osType
     osState: 'Generalized'
     identifier: {
       publisher: 'CrowdStrike'

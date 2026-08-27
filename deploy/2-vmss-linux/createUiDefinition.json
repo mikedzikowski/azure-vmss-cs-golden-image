@@ -1,0 +1,148 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+  "handler": "Microsoft.Azure.CreateUIDef",
+  "version": "0.1.2-preview",
+  "parameters": {
+    "config": {
+      "isWizard": true,
+      "basics": {
+        "description": "Deploy a **Flexible-orchestration Linux VMSS** from the CrowdStrike golden image built in Step 1. Each instance registers its own unique AID on first boot.",
+        "location": {
+          "label": "Region",
+          "toolTip": "Region for the VMSS and networking.",
+          "resourceTypes": [
+            "Microsoft.Compute/virtualMachineScaleSets",
+            "Microsoft.Network/virtualNetworks"
+          ]
+        }
+      }
+    },
+    "basics": [
+      {
+        "name": "adminUsername",
+        "type": "Microsoft.Common.TextBox",
+        "label": "Admin username",
+        "defaultValue": "azureuser",
+        "toolTip": "Local administrator username for the Linux instances.",
+        "constraints": {
+          "required": true,
+          "validations": [
+            { "regex": "^[a-z_][a-z0-9_-]{2,31}$", "message": "3-32 chars, lowercase letters/digits/_/-, must not start with a digit." }
+          ]
+        },
+        "visible": true
+      },
+      {
+        "name": "adminPassword",
+        "type": "Microsoft.Common.PasswordBox",
+        "label": {
+          "password": "Admin password",
+          "confirmPassword": "Confirm password"
+        },
+        "toolTip": "Local administrator password. Azure Linux requires 6-72 chars with at least 3 of: lowercase, uppercase, digit, special character.",
+        "constraints": {
+          "required": true,
+          "regex": "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{12,72}$",
+          "validationMessage": "12-72 chars with at least one lowercase, one uppercase, and one digit."
+        },
+        "options": {
+          "hideConfirmation": false
+        },
+        "visible": true
+      }
+    ],
+    "steps": [
+      {
+        "name": "vmssConfig",
+        "label": "VMSS configuration",
+        "elements": [
+          {
+            "name": "keyVaultName",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Key Vault name",
+            "toolTip": "The Key Vault created by Step 1 (shown in Step 1's deployment outputs).",
+            "constraints": {
+              "required": true,
+              "validations": [
+                {
+                  "regex": "^[a-zA-Z][a-zA-Z0-9-]{1,22}[a-zA-Z0-9]$",
+                  "message": "3-24 chars, start with a letter, alphanumeric/hyphen, no trailing hyphen."
+                }
+              ]
+            },
+            "visible": true
+          },
+          {
+            "name": "imageVersion",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Image version",
+            "defaultValue": "latest",
+            "toolTip": "Golden image version to deploy. Use 'latest' for the newest published version or pin an exact version.",
+            "constraints": {
+              "required": true,
+              "validations": [
+                {
+                  "regex": "^(latest|[0-9]+\\.[0-9]+\\.[0-9]+)$",
+                  "message": "Use 'latest' or an exact version like 1.0.0."
+                }
+              ]
+            },
+            "visible": true
+          },
+          {
+            "name": "imageDefinitionName",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Image definition name",
+            "defaultValue": "CrowdStrike-Ubuntu-2204",
+            "toolTip": "The image definition created by Step 1 (shown in Step 1's outputs as imageDefinitionName). Must match exactly.",
+            "constraints": {
+              "required": true,
+              "validations": [
+                { "regex": "^[^\\s]{2,80}$", "message": "Enter the image definition name from Step 1 (no spaces)." }
+              ]
+            },
+            "visible": true
+          },
+          {
+            "name": "vmSize",
+            "type": "Microsoft.Compute.SizeSelector",
+            "label": "VM size",
+            "toolTip": "Size for the scale set instances.",
+            "recommendedSizes": [
+              "Standard_D2s_v3",
+              "Standard_D4s_v3",
+              "Standard_D2s_v5"
+            ],
+            "osPlatform": "Linux",
+            "count": "[steps('vmssConfig').instanceCount]",
+            "visible": true
+          },
+          {
+            "name": "instanceCount",
+            "type": "Microsoft.Common.Slider",
+            "label": "Instance count",
+            "min": 1,
+            "max": 100,
+            "defaultValue": 2,
+            "showStepMarkers": false,
+            "toolTip": "Number of VM instances in the scale set.",
+            "constraints": {
+              "required": true
+            },
+            "visible": true
+          }
+        ]
+      }
+    ],
+    "outputs": {
+      "location": "[location()]",
+      "adminUsername": "[basics('adminUsername')]",
+      "adminPassword": "[basics('adminPassword').password]",
+      "keyVaultName": "[steps('vmssConfig').keyVaultName]",
+      "imageVersion": "[steps('vmssConfig').imageVersion]",
+      "imageDefinitionName": "[steps('vmssConfig').imageDefinitionName]",
+      "vmSku": "[steps('vmssConfig').vmSize]",
+      "instanceCount": "[int(steps('vmssConfig').instanceCount)]"
+    }
+  }
+}

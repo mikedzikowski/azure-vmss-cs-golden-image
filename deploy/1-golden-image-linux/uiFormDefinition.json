@@ -1,0 +1,185 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2021-09-09/uiFormDefinition.schema.json#",
+  "view": {
+    "kind": "Form",
+    "properties": {
+      "title": "CrowdStrike Falcon golden image (Linux)",
+      "steps": [
+        {
+          "name": "basics",
+          "label": "Basics",
+          "description": "Build a Linux golden image with the CrowdStrike Falcon sensor pre-installed. Provide your Falcon API Client ID/Secret. A Key Vault is created and seeded with the secrets by the deployment. The sensor is installed with PREP_GOLDEN_IMAGE so the AID is stripped for cloning.",
+          "elements": [
+            {
+              "name": "resourceScope",
+              "type": "Microsoft.Common.ResourceScope",
+              "location": {
+                "label": "Region",
+                "toolTip": "Region for the gallery, image, Key Vault, and Image Builder template.",
+                "resourceTypes": [
+                  "Microsoft.Compute/galleries",
+                  "Microsoft.VirtualMachineImages/imageTemplates",
+                  "Microsoft.KeyVault/vaults"
+                ]
+              }
+            },
+            {
+              "name": "falconClientId",
+              "type": "Microsoft.Common.TextBox",
+              "label": "CrowdStrike API Client ID",
+              "toolTip": "Falcon OAuth2 API client id. Needs Sensor Download (read) and Sensor Update Policies (read) scopes.",
+              "constraints": {
+                "required": true,
+                "validations": [
+                  {
+                    "regex": "^[0-9a-fA-F]{32}$",
+                    "message": "Client ID is a 32-character hexadecimal string."
+                  }
+                ]
+              },
+              "visible": true
+            },
+            {
+              "name": "falconClientSecret",
+              "type": "Microsoft.Common.PasswordBox",
+              "label": {
+                "password": "CrowdStrike API Client Secret",
+                "confirmPassword": "Confirm Client Secret"
+              },
+              "toolTip": "Falcon OAuth2 API client secret. Stored as a secret in the Key Vault created by this deployment.",
+              "constraints": {
+                "required": true,
+                "regex": "^[a-zA-Z0-9]{32,}$",
+                "validationMessage": "Enter the API client secret (letters and numbers, 32+ characters)."
+              },
+              "options": {
+                "hideConfirmation": true
+              },
+              "visible": true
+            },
+            {
+              "name": "sensorUpdatePolicyName",
+              "type": "Microsoft.Common.TextBox",
+              "label": "Sensor Update Policy name (optional)",
+              "defaultValue": "",
+              "toolTip": "Optional Linux Sensor Update Policy that determines which sensor version to install. Leave empty to install the latest available version. If you set a policy, it must resolve to a version currently available in the download catalog.",
+              "constraints": {
+                "required": false,
+                "validations": [
+                  { "regex": "^.{0,200}$", "message": "Enter a sensor update policy name (or leave empty)." }
+                ]
+              },
+              "visible": true
+            }
+          ]
+        },
+        {
+          "name": "sourceImage",
+          "label": "Source image",
+          "elements": [
+            {
+              "name": "sourceImageInfo",
+              "type": "Microsoft.Common.InfoBox",
+              "visible": true,
+              "options": {
+                "icon": "Info",
+                "text": "The base Linux image the golden image is built from. It must be a Gen2 / Trusted Launch capable SKU (typically ends in -gen2). Defaults target Ubuntu Server 22.04 LTS (Gen2)."
+              }
+            },
+            {
+              "name": "sourceImagePublisher",
+              "type": "Microsoft.Common.TextBox",
+              "label": "Publisher",
+              "defaultValue": "Canonical",
+              "toolTip": "Marketplace image publisher, e.g. Canonical, RedHat, SUSE. Feeds the live SKU list below.",
+              "constraints": {
+                "required": true,
+                "validations": [
+                  { "regex": "^[^\\s]{2,}$", "message": "Enter a publisher name (no spaces)." }
+                ]
+              },
+              "visible": true
+            },
+            {
+              "name": "sourceImageOffer",
+              "type": "Microsoft.Common.TextBox",
+              "label": "Offer",
+              "defaultValue": "0001-com-ubuntu-server-jammy",
+              "toolTip": "Marketplace image offer, e.g. 0001-com-ubuntu-server-jammy (Ubuntu 22.04). Feeds the live SKU list below.",
+              "constraints": {
+                "required": true,
+                "validations": [
+                  { "regex": "^[^\\s]{2,}$", "message": "Enter an offer name (no spaces)." }
+                ]
+              },
+              "visible": true
+            },
+            {
+              "name": "skusApi",
+              "type": "Microsoft.Solutions.ArmApiControl",
+              "request": {
+                "method": "GET",
+                "path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/locations/', steps('basics').resourceScope.location.name, '/publishers/', steps('sourceImage').sourceImagePublisher, '/artifacttypes/vmimage/offers/', steps('sourceImage').sourceImageOffer, '/skus?api-version=2023-07-01')]"
+              }
+            },
+            {
+              "name": "sourceImageSku",
+              "type": "Microsoft.Common.DropDown",
+              "label": "SKU",
+              "toolTip": "Linux SKU (pulled live from Azure for the selected region). Only Gen2 / Trusted Launch capable SKUs are listed (the golden image is Gen2), e.g. 22_04-lts-gen2.",
+              "constraints": {
+                "required": true,
+                "allowedValues": "[map(filter(steps('sourceImage').skusApi, (item) => contains(item.name, 'gen2')), (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
+              },
+              "visible": true
+            },
+            {
+              "name": "sourceImageVersion",
+              "type": "Microsoft.Common.TextBox",
+              "label": "Version",
+              "defaultValue": "latest",
+              "toolTip": "Source image version. 'latest' uses the newest published version, or enter an exact version.",
+              "constraints": {
+                "required": true,
+                "validations": [
+                  { "regex": "^(latest|[0-9]+\\.[0-9]+\\.[0-9]+)$", "message": "Use 'latest' or an exact version like 22.04.202406100." }
+                ]
+              },
+              "visible": true
+            },
+            {
+              "name": "imageDefinitionName",
+              "type": "Microsoft.Common.TextBox",
+              "label": "Image definition name",
+              "defaultValue": "CrowdStrike-Ubuntu-2204",
+              "toolTip": "Name for the gallery image definition created for this build. Pass the same value to Step 2. Rename to match your distro/version (e.g. CrowdStrike-RHEL-9).",
+              "constraints": {
+                "required": true,
+                "validations": [
+                  { "regex": "^[^\\s]{2,80}$", "message": "Enter an image definition name (no spaces)." }
+                ]
+              },
+              "visible": true
+            }
+          ]
+        }
+      ]
+    },
+    "outputs": {
+      "kind": "ResourceGroup",
+      "resourceGroupId": "[steps('basics').resourceScope.resourceGroup.id]",
+      "location": "[steps('basics').resourceScope.location.name]",
+      "parameters": {
+        "location": "[steps('basics').resourceScope.location.name]",
+        "falconClientId": "[steps('basics').falconClientId]",
+        "falconClientSecret": "[steps('basics').falconClientSecret.password]",
+        "sensorUpdatePolicyName": "[steps('basics').sensorUpdatePolicyName]",
+        "sourceImagePublisher": "[steps('sourceImage').sourceImagePublisher]",
+        "sourceImageOffer": "[steps('sourceImage').sourceImageOffer]",
+        "sourceImageSku": "[steps('sourceImage').sourceImageSku]",
+        "sourceImageVersion": "[steps('sourceImage').sourceImageVersion]",
+        "imageDefinitionName": "[steps('sourceImage').imageDefinitionName]"
+      }
+    }
+  }
+}

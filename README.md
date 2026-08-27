@@ -69,6 +69,44 @@ This button opens a **guided form** (renders `deploy/2-vmss/uiFormDefinition.jso
 
 ---
 
+## Deploy to Azure (Linux)
+
+Same two-step flow, for a **Linux** golden image. The Linux build uses the CrowdStrike [`falcon-linux-install.sh`](https://github.com/CrowdStrike/falcon-scripts/blob/main/bash/install/falcon-linux-install.sh) script with **`PREP_GOLDEN_IMAGE=true`**: the sensor is installed and registered (which assigns an AID), then the **AID is stripped** (`falconctl -d -f --aid`) so the image ships with the CID baked in but no AID. Each VM created from the image registers its own unique AID on first boot. (This is the Linux analogue of the Windows `NO_START=1` pattern — the mechanism differs, the outcome is the same.)
+
+Defaults target **Ubuntu Server 22.04 LTS (Gen2 / Trusted Launch)**; the source-image form fields let you pick another Gen2 SKU (RHEL, SUSE, etc.).
+
+### Step 1 (Linux) — Create the Key Vault, gallery, and Image Builder (then build)
+
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F1-golden-image-linux%2Fazuredeploy.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F1-golden-image-linux%2FuiFormDefinition.json)
+
+**Then start the image build** (deploying only *creates* the Image Builder template):
+
+- **Portal:** open the image template resource (`crowdstrike-dev-linux-aib-template`) and click **Start build**.
+- **CLI:**
+  ```bash
+  az resource invoke-action \
+    --resource-group <your-rg> \
+    --resource-type Microsoft.VirtualMachineImages/imageTemplates \
+    --name crowdstrike-dev-linux-aib-template \
+    --action Run
+  ```
+
+### Step 2 (Linux) — Deploy the VMSS from the golden image
+
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F2-vmss-linux%2Fazuredeploy.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F2-vmss-linux%2FuiFormDefinition.json)
+
+Pass the **Key Vault name** and **Image definition name** shown in Step 1's outputs. Instances use password auth by default (mirroring Windows); for production, switch `modules/vmssLinux.bicep` to SSH keys.
+
+> **Verify the sensor on Linux instances:**
+> ```bash
+> az vm run-command invoke -g <your-rg> -n <instance-name> \
+>   --command-id RunShellScript \
+>   --scripts "systemctl is-active falcon-sensor; sudo /opt/CrowdStrike/falconctl -g --aid"
+> ```
+> Expect `active`, and each host appears in the Falcon console with its own unique AID.
+
+---
+
 ## Guided portal forms
 
 The **Deploy to Azure** buttons above open a **guided, multi-step form** — not the raw parameter list. They use the portal's `CustomDeploymentBlade`, which takes both the template and a **Form view** definition:
@@ -204,13 +242,17 @@ main.bicep                        # Advanced all-in-one orchestrator (existing K
 parameters.json                   # EXAMPLE parameters for main.bicep (placeholders only — no secrets)
 modules/
   keyVault.bicep                  # Creates RBAC Key Vault + seeds CrowdStrike secrets from secure params
-  computeGallery.bicep            # Azure Compute Gallery + image definition (Trusted Launch)
-  imageBuilder.bicep              # Azure Image Builder template + identity + role assignments
+  computeGallery.bicep            # Azure Compute Gallery + image definition (Trusted Launch; osType Windows|Linux)
+  imageBuilder.bicep              # Azure Image Builder template (Windows, NO_START=1) + identity + role assignments
+  imageBuilderLinux.bicep         # Azure Image Builder template (Linux, PREP_GOLDEN_IMAGE) + identity + role assignments
   networking.bicep                # VNet / Subnet / NSG
-  vmss.bicep                      # Flexible VMSS from the gallery image (Trusted Launch)
+  vmss.bicep                      # Flexible VMSS (Windows) from the gallery image (Trusted Launch)
+  vmssLinux.bicep                 # Flexible VMSS (Linux) from the gallery image (Trusted Launch)
 deploy/
-  1-golden-image/                 # Button 1: self-contained (KV + gallery + AIB) + azuredeploy.json + uiFormDefinition.json + createUiDefinition.json
-  2-vmss/                         # Button 2: networking + VMSS + azuredeploy.json + uiFormDefinition.json + createUiDefinition.json
+  1-golden-image/                 # Windows Button 1: self-contained (KV + gallery + AIB) + azuredeploy.json + uiFormDefinition.json + createUiDefinition.json
+  2-vmss/                         # Windows Button 2: networking + VMSS + azuredeploy.json + uiFormDefinition.json + createUiDefinition.json
+  1-golden-image-linux/           # Linux Button 1: self-contained (KV + gallery + AIB) + azuredeploy.json + uiFormDefinition.json + createUiDefinition.json
+  2-vmss-linux/                   # Linux Button 2: networking + VMSS + azuredeploy.json + uiFormDefinition.json + createUiDefinition.json
 scripts/
   Install-FalconGoldenImage.ps1   # Reference: sensor install (NO_START=1) used by AIB
   Update-FalconGoldenImage.ps1    # Reference: image update runbook
