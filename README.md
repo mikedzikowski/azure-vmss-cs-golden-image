@@ -5,11 +5,7 @@ Build a **golden image** with the CrowdStrike Falcon sensor pre-installed (Azure
 ## Prerequisites
 
 1. **Azure rights** to create resources **and role assignments** (Owner, or Contributor + User Access Administrator) in the target resource group.
-2. **Register providers** once per subscription:
-   ```bash
-   for p in Microsoft.VirtualMachineImages Microsoft.Compute Microsoft.Storage Microsoft.KeyVault Microsoft.Network Microsoft.ContainerInstance; do az provider register -n $p; done
-   ```
-3. **A CrowdStrike Falcon API client** with **Sensor Download (Read)** + **Sensor Update Policies (Read)** scopes. You'll enter its Client ID / Secret in Step 1.
+2. **A CrowdStrike Falcon API client** with **Sensor Download (Read)** + **Sensor Update Policies (Read)** scopes. You'll enter its Client ID / Secret in Step 1.
 
 ## Deploy
 
