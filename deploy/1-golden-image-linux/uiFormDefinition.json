@@ -83,7 +83,7 @@
               "visible": true,
               "options": {
                 "icon": "Info",
-                "text": "Select the base Linux image via the dropdowns below (pulled live from Azure). Publisher is filtered to common Linux publishers; only Gen2 / Trusted Launch capable SKUs are listed (the golden image is Gen2). Defaults target Ubuntu Server 22.04 LTS (Gen2)."
+                "text": "Select the base Linux image via the dropdowns (pulled live from Azure). The golden image is Gen2 / Trusted Launch and x64, so ARM64 and -gen1 SKUs are hidden — choose a Gen2-capable SKU (e.g. one ending in -gen2, or Ubuntu 24.04's 'server'). Defaults target Ubuntu Server 22.04 LTS (Gen2)."
               }
             },
             {
@@ -140,12 +140,12 @@
               "name": "sourceImageSku",
               "type": "Microsoft.Common.DropDown",
               "label": "SKU",
-              "defaultValue": "[coalesce(first(map(filter(steps('sourceImage').skusApi, (item) => contains(item.name, 'gen2')), (item) => item.name)), first(map(steps('sourceImage').skusApi, (item) => item.name)))]",
+              "defaultValue": "[coalesce(first(map(filter(steps('sourceImage').skusApi, (item) => and(contains(item.name, 'gen2'), and(not(contains(toLower(item.name), 'arm')), not(contains(toLower(item.name), 'cvm'))))), (item) => item.name)), first(map(filter(steps('sourceImage').skusApi, (item) => and(not(contains(toLower(item.name), 'gen1')), and(not(contains(toLower(item.name), 'arm')), not(contains(toLower(item.name), 'cvm'))))), (item) => item.name)))]",
               "filter": true,
-              "toolTip": "Linux SKU for the selected offer (pulled live from Azure). Only Gen2 / Trusted Launch capable SKUs are listed (the golden image is Gen2), e.g. 22_04-lts-gen2.",
+              "toolTip": "Linux SKU for the selected offer (pulled live from Azure). Pick a Gen2 / Trusted Launch capable, x64 SKU. ARM64, -gen1, and confidential-VM (cvm) SKUs are excluded.",
               "constraints": {
                 "required": true,
-                "allowedValues": "[map(filter(steps('sourceImage').skusApi, (item) => contains(item.name, 'gen2')), (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
+                "allowedValues": "[map(filter(steps('sourceImage').skusApi, (item) => and(not(contains(toLower(item.name), 'gen1')), and(not(contains(toLower(item.name), 'arm')), not(contains(toLower(item.name), 'cvm'))))), (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
               },
               "visible": true
             },
