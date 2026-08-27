@@ -6,7 +6,7 @@
     "config": {
       "isWizard": true,
       "basics": {
-        "description": "Build a **Windows golden image** with the CrowdStrike Falcon sensor pre-installed (Azure Image Builder + Compute Gallery). Provide your Falcon **API Client ID/Secret** and the **source image** to build from. Secrets are stored in a Key Vault created by the deployment — nothing is written to disk.",
+        "description": "Build a **Windows golden image** with the CrowdStrike Falcon sensor pre-installed (Azure Image Builder + Compute Gallery). Provide your Falcon **API Client ID/Secret** and the **source image** to build from. Secrets are stored in a Key Vault created by the deployment \u2014 nothing is written to disk.",
         "location": {
           "label": "Region",
           "toolTip": "Region for the gallery, image, Key Vault, and Image Builder template.",
@@ -50,6 +50,23 @@
         },
         "options": {
           "hideConfirmation": true
+        },
+        "visible": true
+      },
+      {
+        "name": "sensorUpdatePolicyName",
+        "type": "Microsoft.Common.TextBox",
+        "label": "Sensor Update Policy name",
+        "defaultValue": "platform_default",
+        "toolTip": "Windows Sensor Update Policy that determines the sensor version. Must resolve to a version available in the download catalog. If platform_default is aged-out in your tenant, enter a policy targeting a current version.",
+        "constraints": {
+          "required": true,
+          "validations": [
+            {
+              "regex": "^.{1,200}$",
+              "message": "Enter a sensor update policy name."
+            }
+          ]
         },
         "visible": true
       }
@@ -146,7 +163,8 @@
       "sourceImagePublisher": "[steps('sourceImage').sourceImagePublisher]",
       "sourceImageOffer": "[steps('sourceImage').sourceImageOffer]",
       "sourceImageSku": "[steps('sourceImage').sourceImageSku]",
-      "sourceImageVersion": "[steps('sourceImage').sourceImageVersion]"
+      "sourceImageVersion": "[steps('sourceImage').sourceImageVersion]",
+      "sensorUpdatePolicyName": "[basics('sensorUpdatePolicyName')]"
     }
   }
 }

@@ -56,6 +56,20 @@
                 "hideConfirmation": true
               },
               "visible": true
+            },
+            {
+              "name": "sensorUpdatePolicyName",
+              "type": "Microsoft.Common.TextBox",
+              "label": "Sensor Update Policy name",
+              "defaultValue": "platform_default",
+              "toolTip": "Windows Sensor Update Policy that determines which sensor version to install. Must resolve to a version currently available in the download catalog. If 'platform_default' points to an aged-out version in your tenant, enter a policy that targets a current version (the build fails at 'Unable to fetch installer details' otherwise).",
+              "constraints": {
+                "required": true,
+                "validations": [
+                  { "regex": "^.{1,200}$", "message": "Enter a sensor update policy name." }
+                ]
+              },
+              "visible": true
             }
           ]
         },
@@ -145,6 +159,7 @@
         "location": "[steps('basics').resourceScope.location.name]",
         "falconClientId": "[steps('basics').falconClientId]",
         "falconClientSecret": "[steps('basics').falconClientSecret.password]",
+        "sensorUpdatePolicyName": "[steps('basics').sensorUpdatePolicyName]",
         "sourceImagePublisher": "[steps('sourceImage').sourceImagePublisher]",
         "sourceImageOffer": "[steps('sourceImage').sourceImageOffer]",
         "sourceImageSku": "[steps('sourceImage').sourceImageSku]",
