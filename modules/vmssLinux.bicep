@@ -256,6 +256,12 @@ resource vmScaleSet 'Microsoft.Compute/virtualMachineScaleSets@2023-09-01' = {
       // own unique AID - so no runtime CID injection is needed.
     }
   }
+  // The instances attach to the load balancer backend pool via a string resourceId (no
+  // symbolic reference), so Bicep cannot infer the dependency. Make it explicit to avoid a
+  // "load balancer not found" race during parallel creation.
+  dependsOn: [
+    loadBalancer
+  ]
 }
 
 // =============================================================================

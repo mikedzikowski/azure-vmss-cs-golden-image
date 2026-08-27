@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.46.1.21595",
-      "templateHash": "3618381868241131088"
+      "templateHash": "5790001125382773565"
     }
   },
   "parameters": {
@@ -392,7 +392,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.46.1.21595",
-              "templateHash": "10742013315960511611"
+              "templateHash": "16015051059162758432"
             }
           },
           "parameters": {
@@ -657,6 +657,7 @@
                 }
               },
               "dependsOn": [
+                "[resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName'))]",
                 "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('vmssIdentityName'))]"
               ]
             },
