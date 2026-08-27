@@ -105,14 +105,14 @@
               "type": "Microsoft.Solutions.ArmApiControl",
               "request": {
                 "method": "GET",
-                "path": "[concat(subscription().id, '/providers/Microsoft.Compute/locations/', steps('basics').resourceScope.location.name, '/publishers/', steps('sourceImage').sourceImagePublisher, '/artifacttypes/vmimage/offers/', steps('sourceImage').sourceImageOffer, '/skus?api-version=2023-07-01')]"
+                "path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/locations/', steps('basics').resourceScope.location.name, '/publishers/', steps('sourceImage').sourceImagePublisher, '/artifacttypes/vmimage/offers/', steps('sourceImage').sourceImageOffer, '/skus?api-version=2023-07-01')]"
               }
             },
             {
               "name": "sourceImageSku",
               "type": "Microsoft.Common.DropDown",
               "label": "SKU",
-              "toolTip": "Image SKU (pulled live from Azure). Pick a Gen2 / Trusted Launch capable SKU (typically ends in -g2).",
+              "toolTip": "Windows Server SKU (pulled live from Azure for the selected region). Pick a Gen2 / Trusted Launch capable SKU, e.g. 2022-datacenter-g2 or a *-azure-edition SKU.",
               "constraints": {
                 "required": true,
                 "allowedValues": "[map(steps('sourceImage').skusApi, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
