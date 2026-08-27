@@ -83,67 +83,45 @@
               "visible": true,
               "options": {
                 "icon": "Info",
-                "text": "The base Windows image the golden image is built from. It must be a Gen2 / Trusted Launch capable SKU. Defaults target Windows Server 2022 Datacenter (Gen2)."
+                "text": "Choose a validated Windows Server (Gen2 / Trusted Launch, x64) image, then a version. These are confirmed to build with this solution. Defaults to Windows Server 2022 Datacenter."
               }
             },
             {
-              "name": "sourceImagePublisher",
-              "type": "Microsoft.Common.TextBox",
-              "label": "Publisher",
-              "defaultValue": "MicrosoftWindowsServer",
-              "toolTip": "Marketplace image publisher. Feeds the live SKU list below.",
+              "name": "image",
+              "type": "Microsoft.Common.DropDown",
+              "label": "Windows image",
+              "defaultValue": "Windows Server 2022 Datacenter (Gen2)",
+              "filter": true,
+              "toolTip": "Curated Gen2 / Trusted Launch capable, x64 Windows Server images validated to build with this solution. (Encoded as publisher|offer|sku|definitionName.)",
               "constraints": {
                 "required": true,
-                "validations": [
-                  { "regex": "^[^\\s]{2,}$", "message": "Enter a publisher name (no spaces)." }
+                "allowedValues": [
+                  { "label": "Windows Server 2025 Datacenter (Gen2)", "value": "MicrosoftWindowsServer|WindowsServer|2025-datacenter-g2|CrowdStrike-Windows-2025" },
+                  { "label": "Windows Server 2022 Datacenter (Gen2)", "value": "MicrosoftWindowsServer|WindowsServer|2022-datacenter-g2|CrowdStrike-Windows-2022" },
+                  { "label": "Windows Server 2019 Datacenter (Gen2)", "value": "MicrosoftWindowsServer|WindowsServer|2019-datacenter-gensecond|CrowdStrike-Windows-2019" },
+                  { "label": "Windows Server 2016 Datacenter (Gen2)", "value": "MicrosoftWindowsServer|WindowsServer|2016-datacenter-gensecond|CrowdStrike-Windows-2016" }
                 ]
               },
               "visible": true
             },
             {
-              "name": "sourceImageOffer",
-              "type": "Microsoft.Common.TextBox",
-              "label": "Offer",
-              "defaultValue": "WindowsServer",
-              "toolTip": "Marketplace image offer. Feeds the live SKU list below.",
-              "constraints": {
-                "required": true,
-                "validations": [
-                  { "regex": "^[^\\s]{2,}$", "message": "Enter an offer name (no spaces)." }
-                ]
-              },
-              "visible": true
-            },
-            {
-              "name": "skusApi",
+              "name": "versionsApi",
               "type": "Microsoft.Solutions.ArmApiControl",
               "request": {
                 "method": "GET",
-                "path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/locations/', steps('basics').resourceScope.location.name, '/publishers/', steps('sourceImage').sourceImagePublisher, '/artifacttypes/vmimage/offers/', steps('sourceImage').sourceImageOffer, '/skus?api-version=2023-07-01')]"
+                "path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/locations/', steps('basics').resourceScope.location.name, '/publishers/', first(split(steps('sourceImage').image, '|')), '/artifacttypes/vmimage/offers/', first(skip(split(steps('sourceImage').image, '|'), 1)), '/skus/', first(skip(split(steps('sourceImage').image, '|'), 2)), '/versions?api-version=2023-07-01')]"
               }
             },
             {
-              "name": "sourceImageSku",
-              "type": "Microsoft.Common.DropDown",
-              "label": "SKU",
-              "toolTip": "Windows Server SKU (pulled live from Azure for the selected region). Only Gen2 / Trusted Launch capable SKUs are listed (the golden image is Gen2), e.g. 2022-datacenter-g2 or *-azure-edition.",
-              "constraints": {
-                "required": true,
-                "allowedValues": "[map(filter(steps('sourceImage').skusApi, (item) => or(contains(item.name, 'g2'), or(contains(item.name, 'gensecond'), contains(item.name, 'azure-edition')))), (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
-              },
-              "visible": true
-            },
-            {
               "name": "sourceImageVersion",
-              "type": "Microsoft.Common.TextBox",
+              "type": "Microsoft.Common.DropDown",
               "label": "Version",
-              "defaultValue": "latest",
-              "toolTip": "Source image version. 'latest' uses the newest published version, or enter an exact version.",
+              "defaultValue": "[last(map(steps('sourceImage').versionsApi, (item) => item.name))]",
+              "filter": true,
+              "toolTip": "Source image version for the selected image (pulled live from Azure). Defaults to newest.",
               "constraints": {
                 "required": true,
-                "validations": [
-                  { "regex": "^(latest|[0-9]+\\.[0-9]+\\.[0-9]+)$", "message": "Use 'latest' or an exact version like 20348.2402.240607." }
-                ]
+                "allowedValues": "[map(steps('sourceImage').versionsApi, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
               },
               "visible": true
             }
@@ -160,11 +138,11 @@
         "falconClientId": "[steps('basics').falconClientId]",
         "falconClientSecret": "[steps('basics').falconClientSecret.password]",
         "sensorUpdatePolicyName": "[steps('basics').sensorUpdatePolicyName]",
-        "sourceImagePublisher": "[steps('sourceImage').sourceImagePublisher]",
-        "sourceImageOffer": "[steps('sourceImage').sourceImageOffer]",
-        "sourceImageSku": "[steps('sourceImage').sourceImageSku]",
+        "sourceImagePublisher": "[first(split(steps('sourceImage').image, '|'))]",
+        "sourceImageOffer": "[first(skip(split(steps('sourceImage').image, '|'), 1))]",
+        "sourceImageSku": "[first(skip(split(steps('sourceImage').image, '|'), 2))]",
         "sourceImageVersion": "[steps('sourceImage').sourceImageVersion]",
-        "imageDefinitionName": "[concat('CrowdStrike-Windows-', first(split(steps('sourceImage').sourceImageSku, '-')))]"
+        "imageDefinitionName": "[last(split(steps('sourceImage').image, '|'))]"
       }
     }
   }
