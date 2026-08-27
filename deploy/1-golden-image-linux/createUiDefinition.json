@@ -82,76 +82,46 @@
             "visible": true,
             "options": {
               "icon": "Info",
-              "text": "The base Linux image the golden image is built from. It must be a Gen2 / Trusted Launch capable SKU (typically ends in -gen2). Defaults target Ubuntu Server 22.04 LTS (Gen2)."
+              "text": "Choose a validated Gen2 / Trusted Launch, x64 base image, then a version. These publisher/offer/SKU combinations are confirmed to build with this solution. Defaults to Ubuntu Server 22.04 LTS."
             }
           },
           {
-            "name": "sourceImagePublisher",
-            "type": "Microsoft.Common.TextBox",
-            "label": "Publisher",
-            "defaultValue": "Canonical",
-            "toolTip": "Marketplace image publisher, e.g. Canonical.",
+            "name": "image",
+            "type": "Microsoft.Common.DropDown",
+            "label": "Linux image",
+            "defaultValue": "Ubuntu Server 22.04 LTS (Gen2)",
+            "filter": true,
+            "toolTip": "Curated Gen2 / Trusted Launch capable, x64 base images validated to build with this solution. (Encoded as publisher|offer|sku|definitionName.)",
             "constraints": {
               "required": true,
-              "validations": [
-                { "regex": "^[^\\s]{2,}$", "message": "Enter a publisher name (no spaces)." }
+              "allowedValues": [
+                { "label": "Ubuntu Server 22.04 LTS (Gen2)", "value": "Canonical|0001-com-ubuntu-server-jammy|22_04-lts-gen2|CrowdStrike-Ubuntu-2204" },
+                { "label": "Ubuntu Server 24.04 LTS (Gen2)", "value": "Canonical|ubuntu-24_04-lts|server|CrowdStrike-Ubuntu-2404" },
+                { "label": "Red Hat Enterprise Linux 9 (Gen2)", "value": "RedHat|RHEL|9-lvm-gen2|CrowdStrike-RHEL-9" },
+                { "label": "Red Hat Enterprise Linux 8 (Gen2)", "value": "RedHat|RHEL|8-lvm-gen2|CrowdStrike-RHEL-8" },
+                { "label": "Debian 12 (Gen2)", "value": "Debian|debian-12|12-gen2|CrowdStrike-Debian-12" }
               ]
             },
             "visible": true
           },
           {
-            "name": "sourceImageOffer",
-            "type": "Microsoft.Common.TextBox",
-            "label": "Offer",
-            "defaultValue": "0001-com-ubuntu-server-jammy",
-            "toolTip": "Marketplace image offer, e.g. 0001-com-ubuntu-server-jammy (Ubuntu 22.04).",
-            "constraints": {
-              "required": true,
-              "validations": [
-                { "regex": "^[^\\s]{2,}$", "message": "Enter an offer name (no spaces)." }
-              ]
-            },
-            "visible": true
-          },
-          {
-            "name": "sourceImageSku",
-            "type": "Microsoft.Common.TextBox",
-            "label": "SKU",
-            "defaultValue": "22_04-lts-gen2",
-            "toolTip": "Marketplace image SKU. Must be Gen2 / Trusted Launch capable (typically ends in -gen2), e.g. 22_04-lts-gen2.",
-            "constraints": {
-              "required": true,
-              "validations": [
-                { "regex": "^[^\\s]{2,}$", "message": "Enter a SKU (no spaces)." }
-              ]
-            },
-            "visible": true
+            "name": "versionsApi",
+            "type": "Microsoft.Solutions.ArmApiControl",
+            "request": {
+              "method": "GET",
+              "path": "[concat(subscription().id, '/providers/Microsoft.Compute/locations/', location(), '/publishers/', first(split(steps('sourceImage').image, '|')), '/artifacttypes/vmimage/offers/', first(skip(split(steps('sourceImage').image, '|'), 1)), '/skus/', first(skip(split(steps('sourceImage').image, '|'), 2)), '/versions?api-version=2023-07-01')]"
+            }
           },
           {
             "name": "sourceImageVersion",
-            "type": "Microsoft.Common.TextBox",
+            "type": "Microsoft.Common.DropDown",
             "label": "Version",
-            "defaultValue": "latest",
-            "toolTip": "Source image version, e.g. latest or an exact version.",
+            "defaultValue": "[last(map(steps('sourceImage').versionsApi, (item) => item.name))]",
+            "filter": true,
+            "toolTip": "Source image version for the selected image (pulled live from Azure). Defaults to newest.",
             "constraints": {
               "required": true,
-              "validations": [
-                { "regex": "^(latest|[0-9]+\\.[0-9]+\\.[0-9]+)$", "message": "Use 'latest' or an exact version." }
-              ]
-            },
-            "visible": true
-          },
-          {
-            "name": "imageDefinitionName",
-            "type": "Microsoft.Common.TextBox",
-            "label": "Image definition name",
-            "defaultValue": "CrowdStrike-Ubuntu-2204",
-            "toolTip": "Name for the gallery image definition. Pass the same value to Step 2. Rename to match your distro/version.",
-            "constraints": {
-              "required": true,
-              "validations": [
-                { "regex": "^[^\\s]{2,80}$", "message": "Enter an image definition name (no spaces)." }
-              ]
+              "allowedValues": "[map(steps('sourceImage').versionsApi, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
             },
             "visible": true
           }
@@ -162,12 +132,12 @@
       "location": "[location()]",
       "falconClientId": "[basics('falconClientId')]",
       "falconClientSecret": "[basics('falconClientSecret').password]",
-      "sourceImagePublisher": "[steps('sourceImage').sourceImagePublisher]",
-      "sourceImageOffer": "[steps('sourceImage').sourceImageOffer]",
-      "sourceImageSku": "[steps('sourceImage').sourceImageSku]",
+      "sourceImagePublisher": "[first(split(steps('sourceImage').image, '|'))]",
+      "sourceImageOffer": "[first(skip(split(steps('sourceImage').image, '|'), 1))]",
+      "sourceImageSku": "[first(skip(split(steps('sourceImage').image, '|'), 2))]",
       "sourceImageVersion": "[steps('sourceImage').sourceImageVersion]",
       "sensorUpdatePolicyName": "[basics('sensorUpdatePolicyName')]",
-      "imageDefinitionName": "[steps('sourceImage').imageDefinitionName]"
+      "imageDefinitionName": "[last(split(steps('sourceImage').image, '|'))]"
     }
   }
 }
