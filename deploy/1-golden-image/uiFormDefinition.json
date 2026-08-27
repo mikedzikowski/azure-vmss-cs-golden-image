@@ -112,10 +112,10 @@
               "name": "sourceImageSku",
               "type": "Microsoft.Common.DropDown",
               "label": "SKU",
-              "toolTip": "Windows Server SKU (pulled live from Azure for the selected region). Pick a Gen2 / Trusted Launch capable SKU, e.g. 2022-datacenter-g2 or a *-azure-edition SKU.",
+              "toolTip": "Windows Server SKU (pulled live from Azure for the selected region). Only Gen2 / Trusted Launch capable SKUs are listed (the golden image is Gen2), e.g. 2022-datacenter-g2 or *-azure-edition.",
               "constraints": {
                 "required": true,
-                "allowedValues": "[map(steps('sourceImage').skusApi, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
+                "allowedValues": "[map(filter(steps('sourceImage').skusApi, (item) => or(contains(item.name, 'g2'), or(contains(item.name, 'gensecond'), contains(item.name, 'azure-edition')))), (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
               },
               "visible": true
             },
