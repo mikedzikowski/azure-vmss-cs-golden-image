@@ -92,6 +92,20 @@
             "visible": true
           },
           {
+            "name": "imageDefinitionName",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Image definition name",
+            "defaultValue": "CrowdStrike-Windows-2022",
+            "toolTip": "The image definition created by Step 1 (shown in Step 1's outputs as imageDefinitionName, e.g. CrowdStrike-Windows-2025). Must match exactly.",
+            "constraints": {
+              "required": true,
+              "validations": [
+                { "regex": "^[^\\s]{2,80}$", "message": "Enter the image definition name from Step 1 (no spaces)." }
+              ]
+            },
+            "visible": true
+          },
+          {
             "name": "vmSize",
             "type": "Microsoft.Compute.SizeSelector",
             "label": "VM size",
@@ -128,6 +142,7 @@
       "adminPassword": "[basics('adminPassword').password]",
       "keyVaultName": "[steps('vmssConfig').keyVaultName]",
       "imageVersion": "[steps('vmssConfig').imageVersion]",
+      "imageDefinitionName": "[steps('vmssConfig').imageDefinitionName]",
       "vmSku": "[steps('vmssConfig').vmSize]",
       "instanceCount": "[int(steps('vmssConfig').instanceCount)]"
     }

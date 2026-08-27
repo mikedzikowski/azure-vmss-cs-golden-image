@@ -163,7 +163,8 @@
         "sourceImagePublisher": "[steps('sourceImage').sourceImagePublisher]",
         "sourceImageOffer": "[steps('sourceImage').sourceImageOffer]",
         "sourceImageSku": "[steps('sourceImage').sourceImageSku]",
-        "sourceImageVersion": "[steps('sourceImage').sourceImageVersion]"
+        "sourceImageVersion": "[steps('sourceImage').sourceImageVersion]",
+        "imageDefinitionName": "[concat('CrowdStrike-Windows-', first(split(steps('sourceImage').sourceImageSku, '-')))]"
       }
     }
   }

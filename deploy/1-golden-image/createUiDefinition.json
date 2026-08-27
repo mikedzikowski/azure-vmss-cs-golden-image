@@ -164,7 +164,8 @@
       "sourceImageOffer": "[steps('sourceImage').sourceImageOffer]",
       "sourceImageSku": "[steps('sourceImage').sourceImageSku]",
       "sourceImageVersion": "[steps('sourceImage').sourceImageVersion]",
-      "sensorUpdatePolicyName": "[basics('sensorUpdatePolicyName')]"
+      "sensorUpdatePolicyName": "[basics('sensorUpdatePolicyName')]",
+      "imageDefinitionName": "[concat('CrowdStrike-Windows-', first(split(steps('sourceImage').sourceImageSku, '-')))]"
     }
   }
 }

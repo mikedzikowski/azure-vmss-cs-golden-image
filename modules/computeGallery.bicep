@@ -64,13 +64,15 @@ resource imageDefinition 'Microsoft.Compute/galleries/images@2023-07-03' = {
   location: location
   tags: tags
   properties: {
-    description: 'Windows Server 2022 with CrowdStrike Falcon sensor pre-installed'
+    description: 'Windows Server golden image with the CrowdStrike Falcon sensor pre-installed'
     osType: 'Windows'
     osState: 'Generalized'
     identifier: {
       publisher: 'CrowdStrike'
       offer: 'FalconGoldenImage'
-      sku: 'Windows-2022-Datacenter'
+      // Use the (OS-derived) definition name so each OS gets a unique publisher/offer/sku
+      // triple within the gallery. The identifier is immutable and must be unique per definition.
+      sku: imageDefinitionName
     }
     recommended: {
       vCPUs: {

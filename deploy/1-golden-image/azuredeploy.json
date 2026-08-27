@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.46.1.21595",
-      "templateHash": "4267116745295995326"
+      "templateHash": "2309092596763329172"
     }
   },
   "parameters": {
@@ -410,7 +410,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.46.1.21595",
-              "templateHash": "2762927622346386611"
+              "templateHash": "4048513625566810475"
             }
           },
           "parameters": {
@@ -485,13 +485,13 @@
               "location": "[parameters('location')]",
               "tags": "[parameters('tags')]",
               "properties": {
-                "description": "Windows Server 2022 with CrowdStrike Falcon sensor pre-installed",
+                "description": "Windows Server golden image with the CrowdStrike Falcon sensor pre-installed",
                 "osType": "Windows",
                 "osState": "Generalized",
                 "identifier": {
                   "publisher": "CrowdStrike",
                   "offer": "FalconGoldenImage",
-                  "sku": "Windows-2022-Datacenter"
+                  "sku": "[parameters('imageDefinitionName')]"
                 },
                 "recommended": {
                   "vCPUs": {
@@ -895,6 +895,13 @@
         "description": "Image definition resource ID."
       },
       "value": "[reference(resourceId('Microsoft.Resources/deployments', 'compute-gallery-deployment'), '2025-04-01').outputs.imageDefinitionId.value]"
+    },
+    "imageDefinitionName": {
+      "type": "string",
+      "metadata": {
+        "description": "Image definition name (derived from the selected OS SKU, e.g. CrowdStrike-Windows-2025). Pass this to Step 2 as imageDefinitionName."
+      },
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'compute-gallery-deployment'), '2025-04-01').outputs.imageDefinitionName.value]"
     },
     "imageBuilderTemplateName": {
       "type": "string",

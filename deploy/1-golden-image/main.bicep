@@ -146,5 +146,8 @@ output galleryId string = computeGallery.outputs.galleryId
 @description('Image definition resource ID.')
 output imageDefinitionId string = computeGallery.outputs.imageDefinitionId
 
+@description('Image definition name (derived from the selected OS SKU, e.g. CrowdStrike-Windows-2025). Pass this to Step 2 as imageDefinitionName.')
+output imageDefinitionName string = computeGallery.outputs.imageDefinitionName
+
 @description('Image Builder template name - run this to build the image (see README).')
 output imageBuilderTemplateName string = imageBuilder.outputs.templateName
