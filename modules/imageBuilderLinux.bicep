@@ -52,7 +52,10 @@ param keyVaultName string
 // VARIABLES
 // =============================================================================
 
-var aibTemplateName = '${namePrefix}-aib-template'
+// Unique per (resource group + image definition), so different distros get distinct
+// templates and re-running the same distro idempotently updates its own. The resolved
+// name is surfaced via the templateName output (use it for the portal/CLI "Start build").
+var aibTemplateName = '${namePrefix}-aib-template-${uniqueString(resourceGroup().id, imageDefinitionName)}'
 var aibManagedIdentityName = '${namePrefix}-aib-identity'
 var sanitizedGalleryName = replace(replace(galleryName, '_', ''), '-', '')
 

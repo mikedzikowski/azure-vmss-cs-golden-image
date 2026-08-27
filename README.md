@@ -50,15 +50,17 @@ The form asks for your CrowdStrike **API Client ID / Secret** and the **source i
 
 Deploying only *creates* the Image Builder template — **you then start the build** (portal: **Start build** on the image template; or the CLI below). It takes ~20–40 min.
 
+The image-definition name is generated automatically from the distro (e.g. `CrowdStrike-Ubuntu-2204`, `CrowdStrike-RHEL-9`), and the Image Builder template name is made unique per image. **Both are shown in Step 1's deployment outputs** (`imageDefinitionName`, `imageBuilderTemplateName`) — use those exact values below and in Step 2.
+
 ```bash
-# template name: crowdstrike-dev-aib-template (Windows) | crowdstrike-dev-linux-aib-template (Linux)
+# use the imageBuilderTemplateName from Step 1's outputs (it carries a unique suffix)
 az resource invoke-action -g <your-rg> \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-  --name <template-name> --action Run
+  --name <imageBuilderTemplateName> --action Run
 
 az resource show -g <your-rg> \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-  --name <template-name> --query "properties.lastRunStatus" -o json   # watch until "Succeeded"
+  --name <imageBuilderTemplateName> --query "properties.lastRunStatus" -o json   # watch until "Succeeded"
 ```
 
 ### Step 2 — Deploy the VMSS

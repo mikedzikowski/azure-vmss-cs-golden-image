@@ -96,11 +96,11 @@
               "constraints": {
                 "required": true,
                 "allowedValues": [
-                  { "label": "Ubuntu Server 22.04 LTS (Gen2)", "value": "Canonical|0001-com-ubuntu-server-jammy|22_04-lts-gen2" },
-                  { "label": "Ubuntu Server 24.04 LTS (Gen2)", "value": "Canonical|ubuntu-24_04-lts|server" },
-                  { "label": "Red Hat Enterprise Linux 9 (Gen2)", "value": "RedHat|RHEL|9-lvm-gen2" },
-                  { "label": "Red Hat Enterprise Linux 8 (Gen2)", "value": "RedHat|RHEL|8-lvm-gen2" },
-                  { "label": "Debian 12 (Gen2)", "value": "Debian|debian-12|12-gen2" }
+                  { "label": "Ubuntu Server 22.04 LTS (Gen2)", "value": "Canonical|0001-com-ubuntu-server-jammy|22_04-lts-gen2|CrowdStrike-Ubuntu-2204" },
+                  { "label": "Ubuntu Server 24.04 LTS (Gen2)", "value": "Canonical|ubuntu-24_04-lts|server|CrowdStrike-Ubuntu-2404" },
+                  { "label": "Red Hat Enterprise Linux 9 (Gen2)", "value": "RedHat|RHEL|9-lvm-gen2|CrowdStrike-RHEL-9" },
+                  { "label": "Red Hat Enterprise Linux 8 (Gen2)", "value": "RedHat|RHEL|8-lvm-gen2|CrowdStrike-RHEL-8" },
+                  { "label": "Debian 12 (Gen2)", "value": "Debian|debian-12|12-gen2|CrowdStrike-Debian-12" }
                 ]
               },
               "visible": true
@@ -110,7 +110,7 @@
               "type": "Microsoft.Solutions.ArmApiControl",
               "request": {
                 "method": "GET",
-                "path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/locations/', steps('basics').resourceScope.location.name, '/publishers/', first(split(steps('sourceImage').image, '|')), '/artifacttypes/vmimage/offers/', first(skip(split(steps('sourceImage').image, '|'), 1)), '/skus/', last(split(steps('sourceImage').image, '|')), '/versions?api-version=2023-07-01')]"
+                "path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/locations/', steps('basics').resourceScope.location.name, '/publishers/', first(split(steps('sourceImage').image, '|')), '/artifacttypes/vmimage/offers/', first(skip(split(steps('sourceImage').image, '|'), 1)), '/skus/', first(skip(split(steps('sourceImage').image, '|'), 2)), '/versions?api-version=2023-07-01')]"
               }
             },
             {
@@ -123,20 +123,6 @@
               "constraints": {
                 "required": true,
                 "allowedValues": "[map(steps('sourceImage').versionsApi, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
-              },
-              "visible": true
-            },
-            {
-              "name": "imageDefinitionName",
-              "type": "Microsoft.Common.TextBox",
-              "label": "Image definition name",
-              "defaultValue": "CrowdStrike-Ubuntu-2204",
-              "toolTip": "Name for the gallery image definition created for this build. Pass the same value to Step 2. Rename to match your distro/version (e.g. CrowdStrike-RHEL-9).",
-              "constraints": {
-                "required": true,
-                "validations": [
-                  { "regex": "^[^\\s]{2,80}$", "message": "Enter an image definition name (no spaces)." }
-                ]
               },
               "visible": true
             }
@@ -155,9 +141,9 @@
         "sensorUpdatePolicyName": "[steps('basics').sensorUpdatePolicyName]",
         "sourceImagePublisher": "[first(split(steps('sourceImage').image, '|'))]",
         "sourceImageOffer": "[first(skip(split(steps('sourceImage').image, '|'), 1))]",
-        "sourceImageSku": "[last(split(steps('sourceImage').image, '|'))]",
+        "sourceImageSku": "[first(skip(split(steps('sourceImage').image, '|'), 2))]",
         "sourceImageVersion": "[steps('sourceImage').sourceImageVersion]",
-        "imageDefinitionName": "[steps('sourceImage').imageDefinitionName]"
+        "imageDefinitionName": "[last(split(steps('sourceImage').image, '|'))]"
       }
     }
   }

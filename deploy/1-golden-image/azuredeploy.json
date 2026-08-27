@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.46.1.21595",
-      "templateHash": "6935792931978105122"
+      "templateHash": "105898340742791011"
     }
   },
   "parameters": {
@@ -615,7 +615,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.46.1.21595",
-              "templateHash": "15759556198116226160"
+              "templateHash": "1463558557039157568"
             }
           },
           "parameters": {
@@ -687,7 +687,7 @@
             }
           },
           "variables": {
-            "aibTemplateName": "[format('{0}-aib-template', parameters('namePrefix'))]",
+            "aibTemplateName": "[format('{0}-aib-template-{1}', parameters('namePrefix'), uniqueString(resourceGroup().id, parameters('imageDefinitionName')))]",
             "aibManagedIdentityName": "[format('{0}-aib-identity', parameters('namePrefix'))]",
             "sanitizedGalleryName": "[replace(replace(parameters('galleryName'), '_', ''), '-', '')]",
             "contributorRoleId": "b24988ac-6180-42a0-ab88-20f7382dd24c",
