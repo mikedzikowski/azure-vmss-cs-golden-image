@@ -37,7 +37,9 @@ Key design points:
 
 You provide the CrowdStrike **API Client ID/Secret** (and cloud) as secure inputs. The template creates an RBAC Key Vault, stores the secrets, creates the Compute Gallery + image definition, and the Image Builder template with its managed identity.
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F1-golden-image%2Fazuredeploy.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F1-golden-image%2Fazuredeploy.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F1-golden-image%2FuiFormDefinition.json)
+
+This button opens a **guided form** (the portal's `CustomDeploymentBlade` renders `deploy/1-golden-image/uiFormDefinition.json`).
 
 Then **trigger the image build** (the button deploys the AIB *template*; this runs it — ~25–40 min):
 
@@ -59,38 +61,40 @@ az resource show -g <your-rg> \
 
 Deploys networking + a Flexible VMSS from the image published in Step 1. Pass the **same Key Vault name** that Step 1 created (shown in Step 1's outputs).
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F2-vmss%2Fazuredeploy.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F2-vmss%2Fazuredeploy.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F2-vmss%2FuiFormDefinition.json)
 
-Use `imageVersion = latest` to pick up the newest published version, or pin an exact version.
+This button opens a **guided form** (renders `deploy/2-vmss/uiFormDefinition.json`). Use `imageVersion = latest` for the newest published version, or pin an exact version.
 
 ---
 
 ## Guided portal forms
 
-The classic **Deploy to Azure** button renders the template's raw parameter list — it does **not** show a custom form. To get a guided, validated experience, this repo ships **Form view** definitions you publish as **Template Specs**.
+The **Deploy to Azure** buttons above open a **guided, multi-step form** — not the raw parameter list. They use the portal's `CustomDeploymentBlade`, which takes both the template and a **Form view** definition:
 
-Each step has a [`uiFormDefinition.json`](deploy/) (Form view, for Template Specs) plus a [`createUiDefinition.json`](deploy/) (the Managed Applications format, usable in the sandbox / a managed-app package).
+```
+https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/<template>/uiFormDefinitionUri/<uiFormDefinition>
+```
+
+Each step ships a [`uiFormDefinition.json`](deploy/) (Form view schema `2021-09-09`) that the button references, plus a [`createUiDefinition.json`](deploy/) (the Managed Applications format) for the sandbox / a managed-app package.
 
 - **Step 1** — CrowdStrike **API Client ID / Secret** and the **source image** Publisher / Offer / SKU / Version.
 - **Step 2** — local **admin username / password**, **Key Vault name**, **image version**, **VM size**, **instance count**.
 
-### Publish as Template Specs (renders the form on Deploy)
+> If you fork this repo, update the button URLs to point at **your** `raw.githubusercontent.com/<owner>/<repo>/<branch>/...` paths for both the `uri` (template) and `uiFormDefinitionUri` (form).
+
+### Alternative: publish as Template Specs
+
+Same forms, deployed from **Template specs → Deploy** in the portal instead of a button:
 
 ```bash
-# Step 1
-az ts create -g <your-rg> --name crowdstrike-golden-image --version 1.0 \
-  --location eastus \
+az ts create -g <your-rg> --name crowdstrike-golden-image --version 1.0 --location eastus \
   --template-file deploy/1-golden-image/azuredeploy.json \
   --ui-form-definition deploy/1-golden-image/uiFormDefinition.json
 
-# Step 2
-az ts create -g <your-rg> --name crowdstrike-vmss --version 1.0 \
-  --location eastus \
+az ts create -g <your-rg> --name crowdstrike-vmss --version 1.0 --location eastus \
   --template-file deploy/2-vmss/azuredeploy.json \
   --ui-form-definition deploy/2-vmss/uiFormDefinition.json
 ```
-
-Then in the portal: **Template specs → (select the spec) → Deploy** — the portal renders the custom form. (Portal: *Template specs → Import* also accepts the template + form.)
 
 ### Preview without deploying
 
