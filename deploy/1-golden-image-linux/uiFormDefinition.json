@@ -83,69 +83,25 @@
               "visible": true,
               "options": {
                 "icon": "Info",
-                "text": "Select the base Linux image via the dropdowns (pulled live from Azure). The golden image is Gen2 / Trusted Launch and x64, so ARM64 and -gen1 SKUs are hidden — choose a Gen2-capable SKU (e.g. one ending in -gen2, or Ubuntu 24.04's 'server'). Defaults target Ubuntu Server 22.04 LTS (Gen2)."
+                "text": "Choose a validated Gen2 / Trusted Launch, x64 base image, then a version. These publisher/offer/SKU combinations are confirmed to build with this solution. Defaults to Ubuntu Server 22.04 LTS."
               }
             },
             {
-              "name": "publishersApi",
-              "type": "Microsoft.Solutions.ArmApiControl",
-              "request": {
-                "method": "GET",
-                "path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/locations/', steps('basics').resourceScope.location.name, '/publishers?api-version=2023-07-01')]"
-              }
-            },
-            {
-              "name": "sourceImagePublisher",
+              "name": "image",
               "type": "Microsoft.Common.DropDown",
-              "label": "Publisher",
-              "defaultValue": "Canonical",
+              "label": "Linux image",
+              "defaultValue": "Ubuntu Server 22.04 LTS (Gen2)",
               "filter": true,
-              "toolTip": "Marketplace image publisher (pulled live from Azure, filtered to common Linux publishers). Type to search.",
+              "toolTip": "Curated Gen2 / Trusted Launch capable, x64 base images validated to build with this solution. (Encoded as publisher|offer|sku.)",
               "constraints": {
                 "required": true,
-                "allowedValues": "[map(filter(steps('sourceImage').publishersApi, (item) => or(contains(item.name, 'Canonical'), or(contains(item.name, 'RedHat'), or(contains(item.name, 'SUSE'), or(contains(item.name, 'OpenLogic'), or(contains(item.name, 'credativ'), contains(item.name, 'Debian'))))))), (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
-              },
-              "visible": true
-            },
-            {
-              "name": "offersApi",
-              "type": "Microsoft.Solutions.ArmApiControl",
-              "request": {
-                "method": "GET",
-                "path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/locations/', steps('basics').resourceScope.location.name, '/publishers/', steps('sourceImage').sourceImagePublisher, '/artifacttypes/vmimage/offers?api-version=2023-07-01')]"
-              }
-            },
-            {
-              "name": "sourceImageOffer",
-              "type": "Microsoft.Common.DropDown",
-              "label": "Offer",
-              "defaultValue": "[coalesce(first(map(filter(steps('sourceImage').offersApi, (item) => contains(item.name, 'ubuntu-server-jammy')), (item) => item.name)), first(map(steps('sourceImage').offersApi, (item) => item.name)))]",
-              "filter": true,
-              "toolTip": "Marketplace image offer for the selected publisher (pulled live from Azure).",
-              "constraints": {
-                "required": true,
-                "allowedValues": "[map(steps('sourceImage').offersApi, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
-              },
-              "visible": true
-            },
-            {
-              "name": "skusApi",
-              "type": "Microsoft.Solutions.ArmApiControl",
-              "request": {
-                "method": "GET",
-                "path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/locations/', steps('basics').resourceScope.location.name, '/publishers/', steps('sourceImage').sourceImagePublisher, '/artifacttypes/vmimage/offers/', steps('sourceImage').sourceImageOffer, '/skus?api-version=2023-07-01')]"
-              }
-            },
-            {
-              "name": "sourceImageSku",
-              "type": "Microsoft.Common.DropDown",
-              "label": "SKU",
-              "defaultValue": "[coalesce(first(map(filter(steps('sourceImage').skusApi, (item) => and(contains(item.name, 'gen2'), and(not(contains(toLower(item.name), 'arm')), not(contains(toLower(item.name), 'cvm'))))), (item) => item.name)), first(map(filter(steps('sourceImage').skusApi, (item) => and(not(contains(toLower(item.name), 'gen1')), and(not(contains(toLower(item.name), 'arm')), not(contains(toLower(item.name), 'cvm'))))), (item) => item.name)))]",
-              "filter": true,
-              "toolTip": "Linux SKU for the selected offer (pulled live from Azure). Pick a Gen2 / Trusted Launch capable, x64 SKU. ARM64, -gen1, and confidential-VM (cvm) SKUs are excluded.",
-              "constraints": {
-                "required": true,
-                "allowedValues": "[map(filter(steps('sourceImage').skusApi, (item) => and(not(contains(toLower(item.name), 'gen1')), and(not(contains(toLower(item.name), 'arm')), not(contains(toLower(item.name), 'cvm'))))), (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
+                "allowedValues": [
+                  { "label": "Ubuntu Server 22.04 LTS (Gen2)", "value": "Canonical|0001-com-ubuntu-server-jammy|22_04-lts-gen2" },
+                  { "label": "Ubuntu Server 24.04 LTS (Gen2)", "value": "Canonical|ubuntu-24_04-lts|server" },
+                  { "label": "Red Hat Enterprise Linux 9 (Gen2)", "value": "RedHat|RHEL|9-lvm-gen2" },
+                  { "label": "Red Hat Enterprise Linux 8 (Gen2)", "value": "RedHat|RHEL|8-lvm-gen2" },
+                  { "label": "Debian 12 (Gen2)", "value": "Debian|debian-12|12-gen2" }
+                ]
               },
               "visible": true
             },
@@ -154,7 +110,7 @@
               "type": "Microsoft.Solutions.ArmApiControl",
               "request": {
                 "method": "GET",
-                "path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/locations/', steps('basics').resourceScope.location.name, '/publishers/', steps('sourceImage').sourceImagePublisher, '/artifacttypes/vmimage/offers/', steps('sourceImage').sourceImageOffer, '/skus/', steps('sourceImage').sourceImageSku, '/versions?api-version=2023-07-01')]"
+                "path": "[concat(steps('basics').resourceScope.subscription.id, '/providers/Microsoft.Compute/locations/', steps('basics').resourceScope.location.name, '/publishers/', first(split(steps('sourceImage').image, '|')), '/artifacttypes/vmimage/offers/', first(skip(split(steps('sourceImage').image, '|'), 1)), '/skus/', last(split(steps('sourceImage').image, '|')), '/versions?api-version=2023-07-01')]"
               }
             },
             {
@@ -197,9 +153,9 @@
         "falconClientId": "[steps('basics').falconClientId]",
         "falconClientSecret": "[steps('basics').falconClientSecret.password]",
         "sensorUpdatePolicyName": "[steps('basics').sensorUpdatePolicyName]",
-        "sourceImagePublisher": "[steps('sourceImage').sourceImagePublisher]",
-        "sourceImageOffer": "[steps('sourceImage').sourceImageOffer]",
-        "sourceImageSku": "[steps('sourceImage').sourceImageSku]",
+        "sourceImagePublisher": "[first(split(steps('sourceImage').image, '|'))]",
+        "sourceImageOffer": "[first(skip(split(steps('sourceImage').image, '|'), 1))]",
+        "sourceImageSku": "[last(split(steps('sourceImage').image, '|'))]",
         "sourceImageVersion": "[steps('sourceImage').sourceImageVersion]",
         "imageDefinitionName": "[steps('sourceImage').imageDefinitionName]"
       }
