@@ -58,7 +58,6 @@ This button opens a **guided form** (the portal's `CustomDeploymentBlade` render
     --name crowdstrike-dev-aib-template \
     --query "properties.lastRunStatus" -o json
   ```
-- **Fully automatic (optional):** set the `startImageBuild` parameter to `true` at deploy time — a bundled deployment script invokes the build for you.
 
 ### Step 2 — Deploy the VMSS from the golden image
 

@@ -75,12 +75,6 @@ param sourceImageSku string = '2022-datacenter-g2'
 @description('Source image version.')
 param sourceImageVersion string = 'latest'
 
-@description('Optionally auto-start the image build after deployment. Default false - normally you click "Start build" on the image template in the portal (or run the Run action). Set true to build automatically (~25-40 min server-side).')
-param startImageBuild bool = false
-
-@description('Do not set. Forces the build-trigger to re-run on each deployment.')
-param buildTriggerTag string = utcNow()
-
 var namePrefix = '${projectName}-${environment}'
 var resourceTags = {
   Environment: environment
@@ -133,8 +127,6 @@ module imageBuilder '../../modules/imageBuilder.bicep' = {
     sourceImageSku: sourceImageSku
     sourceImageVersion: sourceImageVersion
     keyVaultName: keyVaultName
-    startImageBuild: startImageBuild
-    buildTriggerTag: buildTriggerTag
   }
   dependsOn: [
     keyVault
