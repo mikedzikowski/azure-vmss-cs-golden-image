@@ -74,57 +74,75 @@
             },
             {
               "name": "sourceImagePublisher",
-              "type": "Microsoft.Common.TextBox",
+              "type": "Microsoft.Common.DropDown",
               "label": "Publisher",
               "defaultValue": "MicrosoftWindowsServer",
-              "toolTip": "Marketplace image publisher, e.g. MicrosoftWindowsServer.",
+              "toolTip": "Image publisher. Curated to the common Windows publishers (there are ~2,600 publishers in Azure, so a full list is impractical).",
               "constraints": {
                 "required": true,
-                "validations": [
-                  { "regex": "^[^\\s]{2,}$", "message": "Enter a publisher name (no spaces)." }
+                "allowedValues": [
+                  { "label": "MicrosoftWindowsServer", "value": "MicrosoftWindowsServer" },
+                  { "label": "microsoftwindowsdesktop", "value": "microsoftwindowsdesktop" },
+                  { "label": "MicrosoftSQLServer", "value": "MicrosoftSQLServer" }
                 ]
               },
               "visible": true
+            },
+            {
+              "name": "offersApi",
+              "type": "Microsoft.Solutions.ArmApiControl",
+              "request": {
+                "method": "GET",
+                "path": "[concat(subscription().id, '/providers/Microsoft.Compute/locations/', steps('basics').resourceScope.location.name, '/publishers/', steps('sourceImage').sourceImagePublisher, '/artifacttypes/vmimage/offers?api-version=2023-07-01')]"
+              }
             },
             {
               "name": "sourceImageOffer",
-              "type": "Microsoft.Common.TextBox",
+              "type": "Microsoft.Common.DropDown",
               "label": "Offer",
-              "defaultValue": "WindowsServer",
-              "toolTip": "Marketplace image offer, e.g. WindowsServer.",
+              "toolTip": "Image offer for the selected publisher (pulled live from Azure).",
               "constraints": {
                 "required": true,
-                "validations": [
-                  { "regex": "^[^\\s]{2,}$", "message": "Enter an offer name (no spaces)." }
-                ]
+                "allowedValues": "[map(steps('sourceImage').offersApi, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
               },
               "visible": true
+            },
+            {
+              "name": "skusApi",
+              "type": "Microsoft.Solutions.ArmApiControl",
+              "request": {
+                "method": "GET",
+                "path": "[concat(subscription().id, '/providers/Microsoft.Compute/locations/', steps('basics').resourceScope.location.name, '/publishers/', steps('sourceImage').sourceImagePublisher, '/artifacttypes/vmimage/offers/', steps('sourceImage').sourceImageOffer, '/skus?api-version=2023-07-01')]"
+              }
             },
             {
               "name": "sourceImageSku",
-              "type": "Microsoft.Common.TextBox",
+              "type": "Microsoft.Common.DropDown",
               "label": "SKU",
-              "defaultValue": "2022-datacenter-g2",
-              "toolTip": "Marketplace image SKU. Must be Gen2 / Trusted Launch capable (typically ends in -g2).",
+              "toolTip": "Image SKU (pulled live from Azure). Pick a Gen2 / Trusted Launch capable SKU (typically ends in -g2).",
               "constraints": {
                 "required": true,
-                "validations": [
-                  { "regex": "^[^\\s]{2,}$", "message": "Enter a SKU (no spaces)." }
-                ]
+                "allowedValues": "[map(steps('sourceImage').skusApi, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
               },
               "visible": true
             },
             {
+              "name": "versionsApi",
+              "type": "Microsoft.Solutions.ArmApiControl",
+              "request": {
+                "method": "GET",
+                "path": "[concat(subscription().id, '/providers/Microsoft.Compute/locations/', steps('basics').resourceScope.location.name, '/publishers/', steps('sourceImage').sourceImagePublisher, '/artifacttypes/vmimage/offers/', steps('sourceImage').sourceImageOffer, '/skus/', steps('sourceImage').sourceImageSku, '/versions?api-version=2023-07-01')]"
+              }
+            },
+            {
               "name": "sourceImageVersion",
-              "type": "Microsoft.Common.TextBox",
+              "type": "Microsoft.Common.DropDown",
               "label": "Version",
               "defaultValue": "latest",
-              "toolTip": "Source image version, e.g. latest or an exact version.",
+              "toolTip": "Source image version. 'latest' always uses the newest published version; specific versions are pulled live from Azure.",
               "constraints": {
                 "required": true,
-                "validations": [
-                  { "regex": "^(latest|[0-9]+\\.[0-9]+\\.[0-9]+)$", "message": "Use 'latest' or an exact version like 20348.2402.240607." }
-                ]
+                "allowedValues": "[concat(parse('[{\"label\":\"latest\",\"value\":\"latest\"}]'), map(steps('sourceImage').versionsApi, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}'))))]"
               },
               "visible": true
             }
