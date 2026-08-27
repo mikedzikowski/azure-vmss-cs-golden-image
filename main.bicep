@@ -27,7 +27,7 @@ param deploymentMode string = 'complete'
 
 // Azure Compute Gallery Configuration
 @description('Azure Compute Gallery name')
-param galleryName string = '${projectName}_${environment}_gallery'
+param galleryName string = '${projectName}_${environment}_${uniqueString(resourceGroup().id)}'
 
 @description('Image definition name')
 param imageDefinitionName string = 'CrowdStrike-Windows-2022'

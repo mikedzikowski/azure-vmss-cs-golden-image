@@ -54,8 +54,8 @@ param provToken string = ''
 
 // ---- Gallery / image ----
 
-@description('Azure Compute Gallery name (alphanumeric/underscore).')
-param galleryName string = '${projectName}_${environment}_gallery'
+@description('Azure Compute Gallery name (alphanumeric/underscore). Defaults to a name made unique per resource group, since gallery names must be unique in the subscription.')
+param galleryName string = '${projectName}_${environment}_${uniqueString(resourceGroup().id)}'
 
 @description('Image definition name.')
 param imageDefinitionName string = 'CrowdStrike-Windows-2022'
@@ -136,6 +136,9 @@ module imageBuilder '../../modules/imageBuilder.bicep' = {
 
 @description('Key Vault name that was created and seeded.')
 output keyVaultName string = keyVault.outputs.keyVaultName
+
+@description('Azure Compute Gallery name (pass this to Step 2 if deploying it to a different resource group).')
+output galleryName string = computeGallery.outputs.galleryName
 
 @description('Azure Compute Gallery resource ID.')
 output galleryId string = computeGallery.outputs.galleryId

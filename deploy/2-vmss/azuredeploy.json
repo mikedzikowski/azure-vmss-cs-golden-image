@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.46.1.21595",
-      "templateHash": "8440944126294506042"
+      "templateHash": "3618381868241131088"
     }
   },
   "parameters": {
@@ -66,9 +66,9 @@
     },
     "galleryName": {
       "type": "string",
-      "defaultValue": "[format('{0}_{1}_gallery', parameters('projectName'), parameters('environment'))]",
+      "defaultValue": "[format('{0}_{1}_{2}', parameters('projectName'), parameters('environment'), uniqueString(resourceGroup().id))]",
       "metadata": {
-        "description": "Azure Compute Gallery name from Step 1."
+        "description": "Azure Compute Gallery name from Step 1. Defaults to the same per-resource-group unique name Step 1 uses (so a same-RG deploy resolves automatically); override with the galleryName from Step 1 outputs for cross-RG."
       }
     },
     "imageDefinitionName": {

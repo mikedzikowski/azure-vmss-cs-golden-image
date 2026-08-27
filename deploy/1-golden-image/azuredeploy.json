@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.46.1.21595",
-      "templateHash": "6613310748747946933"
+      "templateHash": "4267116745295995326"
     }
   },
   "parameters": {
@@ -92,9 +92,9 @@
     },
     "galleryName": {
       "type": "string",
-      "defaultValue": "[format('{0}_{1}_gallery', parameters('projectName'), parameters('environment'))]",
+      "defaultValue": "[format('{0}_{1}_{2}', parameters('projectName'), parameters('environment'), uniqueString(resourceGroup().id))]",
       "metadata": {
-        "description": "Azure Compute Gallery name (alphanumeric/underscore)."
+        "description": "Azure Compute Gallery name (alphanumeric/underscore). Defaults to a name made unique per resource group, since gallery names must be unique in the subscription."
       }
     },
     "imageDefinitionName": {
@@ -874,6 +874,13 @@
         "description": "Key Vault name that was created and seeded."
       },
       "value": "[reference(resourceId('Microsoft.Resources/deployments', 'keyvault-deployment'), '2025-04-01').outputs.keyVaultName.value]"
+    },
+    "galleryName": {
+      "type": "string",
+      "metadata": {
+        "description": "Azure Compute Gallery name (pass this to Step 2 if deploying it to a different resource group)."
+      },
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', 'compute-gallery-deployment'), '2025-04-01').outputs.galleryName.value]"
     },
     "galleryId": {
       "type": "string",

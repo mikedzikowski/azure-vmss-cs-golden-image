@@ -37,8 +37,8 @@ param adminUsername string = 'azureuser'
 @secure()
 param adminPassword string
 
-@description('Azure Compute Gallery name from Step 1.')
-param galleryName string = '${projectName}_${environment}_gallery'
+@description('Azure Compute Gallery name from Step 1. Defaults to the same per-resource-group unique name Step 1 uses (so a same-RG deploy resolves automatically); override with the galleryName from Step 1 outputs for cross-RG.')
+param galleryName string = '${projectName}_${environment}_${uniqueString(resourceGroup().id)}'
 
 @description('Image definition name from Step 1.')
 param imageDefinitionName string = 'CrowdStrike-Windows-2022'
