@@ -16,9 +16,13 @@ Build a **golden image** with the CrowdStrike Falcon sensor pre-installed (Azure
 
 **Step 1 — Build the image.** Click the button, pick your OS image, and enter your Falcon API Client ID / Secret. Deploying creates the Image Builder template; then **start the build** — in the portal, open the image template resource and click **Start build**. Takes ~20–40 min. The image definition name is shown in the deployment **Outputs**.
 
+*Creates:* a **Key Vault** (seeded with your Falcon secrets), an **Azure Compute Gallery** + **image definition**, and an **Image Builder template** with a managed identity. Starting the build then produces a **versioned golden image** in the gallery — OS updates applied, Falcon sensor installed last (CID baked in, no AID), and the image generalized.
+
 > If the build fails at *"Unable to fetch installer details,"* your Sensor Update Policy points to a version no longer in the catalog. Set **Sensor Update Policy name** to a current policy (Windows defaults to `platform_default`; on Linux, leave blank for the latest).
 
 **Step 2 — Deploy the VMSS.** Once the build succeeds, click the Step 2 button, **select the golden image** from the gallery, pick a **version**, and set the **admin username / password**, **VM size**, and **instance count**.
+
+*Creates:* a **VNet / subnet / NSG**, a **Standard load balancer**, and a **Flexible-orchestration VMSS** (Trusted Launch, user-assigned identity) built from the golden image. Each instance boots, the sensor auto-starts and registers its own unique AID.
 
 ## Verify
 
