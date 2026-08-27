@@ -7,7 +7,7 @@
 // and registers its own unique AID on first boot - no runtime script required.
 //
 // This is the "Deploy to Azure" (button 2) entry point. It is compiled to
-// deploy/2-vmss/azuredeploy.json.
+// deploy/2-vmss-windows/azuredeploy.json.
 // =============================================================================
 
 targetScope = 'resourceGroup'

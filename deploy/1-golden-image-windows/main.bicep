@@ -7,7 +7,7 @@
 //   - Azure Image Builder template + managed identity + role assignments
 // After this deploys, TRIGGER the image build (see README) to produce the image.
 //
-// "Deploy to Azure" button 1 entry point -> compiled to deploy/1-golden-image/azuredeploy.json
+// "Deploy to Azure" button 1 entry point -> compiled to deploy/1-golden-image-windows/azuredeploy.json
 // =============================================================================
 
 targetScope = 'resourceGroup'

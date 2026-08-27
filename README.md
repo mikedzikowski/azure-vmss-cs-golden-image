@@ -38,7 +38,7 @@ Two steps, one **Deploy to Azure** button each.
 
 | | Step 1 — Build the golden image | Step 2 — Deploy the VMSS |
 |---|---|---|
-| **Windows** | [![Deploy](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F1-golden-image%2Fazuredeploy.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F1-golden-image%2FuiFormDefinition.json) | [![Deploy](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F2-vmss%2Fazuredeploy.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F2-vmss%2FuiFormDefinition.json) |
+| **Windows** | [![Deploy](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F1-golden-image-windows%2Fazuredeploy.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F1-golden-image-windows%2FuiFormDefinition.json) | [![Deploy](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F2-vmss-windows%2Fazuredeploy.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F2-vmss-windows%2FuiFormDefinition.json) |
 | **Linux** | [![Deploy](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F1-golden-image-linux%2Fazuredeploy.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F1-golden-image-linux%2FuiFormDefinition.json) | [![Deploy](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#view/Microsoft_Azure_CreateUIDef/CustomDeploymentBlade/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F2-vmss-linux%2Fazuredeploy.json/uiFormDefinitionUri/https%3A%2F%2Fraw.githubusercontent.com%2Fmikedzikowski%2Fazure-vmss-cs-golden-image%2Fmain%2Fdeploy%2F2-vmss-linux%2FuiFormDefinition.json) |
 
 ### Step 1 — Build the golden image
@@ -108,7 +108,7 @@ Step 1 writes these into the new Key Vault from the parameters you provide. **No
 ```bash
 # Step 1 — Key Vault + gallery + Image Builder (self-contained). Swap the -linux path for Linux.
 az deployment group create -g <your-rg> \
-  --template-file deploy/1-golden-image/main.bicep \
+  --template-file deploy/1-golden-image-windows/main.bicep \
   --parameters falconClientId='<id>' falconClientSecret='<secret>' falconCloud='us-1'
   # optional: sensorUpdatePolicyName='<policy>' provToken='<token>' falconCid='<cid>'
 
@@ -116,7 +116,7 @@ az deployment group create -g <your-rg> \
 
 # Step 2 — VMSS from the image (use keyVaultName + imageDefinitionName from Step 1 outputs)
 az deployment group create -g <your-rg> \
-  --template-file deploy/2-vmss/main.bicep \
+  --template-file deploy/2-vmss-windows/main.bicep \
   --parameters keyVaultName='<kv-from-step1>' imageDefinitionName='<def-from-step1>' \
                adminPassword='<secure-password>' imageVersion='latest'
 ```
@@ -169,8 +169,8 @@ modules/
   vmss.bicep                # Flexible VMSS — Windows (Trusted Launch)
   vmssLinux.bicep           # Flexible VMSS — Linux (Trusted Launch)
 deploy/
-  1-golden-image/           # Windows Step 1  ┐ each folder: main.bicep + azuredeploy.json
-  2-vmss/                   # Windows Step 2  │   + uiFormDefinition.json  (button form)
+  1-golden-image-windows/   # Windows Step 1  ┐ each folder: main.bicep + azuredeploy.json
+  2-vmss-windows/           # Windows Step 2  │   + uiFormDefinition.json  (button form)
   1-golden-image-linux/     # Linux   Step 1  │   + createUiDefinition.json (sandbox/managed-app)
   2-vmss-linux/             # Linux   Step 2  ┘
 main.bicep                  # Advanced all-in-one orchestrator (bring-your-own KV; imageOnly|vmssOnly|complete)
