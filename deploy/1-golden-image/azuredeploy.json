@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.46.1.21595",
-      "templateHash": "4267116745295995326"
+      "templateHash": "1986407819682362159"
     }
   },
   "parameters": {
@@ -137,6 +137,20 @@
       "defaultValue": "latest",
       "metadata": {
         "description": "Source image version."
+      }
+    },
+    "startImageBuild": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "description": "Automatically start the image build after deployment (recommended). The build runs server-side for ~25-40 min after this deploys."
+      }
+    },
+    "buildTriggerTag": {
+      "type": "string",
+      "defaultValue": "[utcNow()]",
+      "metadata": {
+        "description": "Do not set. Forces the build-trigger to re-run on each deployment."
       }
     }
   },
@@ -595,6 +609,12 @@
           },
           "keyVaultName": {
             "value": "[parameters('keyVaultName')]"
+          },
+          "startImageBuild": {
+            "value": "[parameters('startImageBuild')]"
+          },
+          "buildTriggerTag": {
+            "value": "[parameters('buildTriggerTag')]"
           }
         },
         "template": {
@@ -604,7 +624,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.46.1.21595",
-              "templateHash": "15759556198116226160"
+              "templateHash": "5036253189917173601"
             }
           },
           "parameters": {
@@ -672,6 +692,20 @@
               "type": "string",
               "metadata": {
                 "description": "Key Vault name containing CrowdStrike secrets"
+              }
+            },
+            "startImageBuild": {
+              "type": "bool",
+              "defaultValue": true,
+              "metadata": {
+                "description": "Automatically start the image build after the Image Builder template is created (via a deployment script that invokes the Run action)."
+              }
+            },
+            "buildTriggerTag": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Value that changes each deployment so the build-trigger script re-runs. Pass utcNow() from the parent."
               }
             }
           },
@@ -826,6 +860,33 @@
                 "[resourceId('Microsoft.Authorization/roleAssignments', guid(resourceGroup().id, resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('aibManagedIdentityName')), variables('contributorRoleId')))]",
                 "[extensionResourceId(resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName')), 'Microsoft.Authorization/roleAssignments', guid(resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('aibManagedIdentityName')), variables('keyVaultSecretsUserRoleId')))]",
                 "[extensionResourceId(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('aibManagedIdentityName')), 'Microsoft.Authorization/roleAssignments', guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('aibManagedIdentityName')), resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('aibManagedIdentityName')), variables('managedIdentityOperatorRoleId')))]"
+              ]
+            },
+            {
+              "condition": "[parameters('startImageBuild')]",
+              "type": "Microsoft.Resources/deploymentScripts",
+              "apiVersion": "2023-08-01",
+              "name": "[format('{0}-start-build', parameters('namePrefix'))]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "kind": "AzureCLI",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[format('{0}', resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('aibManagedIdentityName')))]": {}
+                }
+              },
+              "properties": {
+                "azCliVersion": "2.52.0",
+                "retentionInterval": "PT1H",
+                "timeout": "PT30M",
+                "cleanupPreference": "OnSuccess",
+                "forceUpdateTag": "[if(empty(parameters('buildTriggerTag')), '1', parameters('buildTriggerTag'))]",
+                "scriptContent": "[format('az rest --method post --url \"https://management.azure.com{0}/run?api-version=2023-07-01\" --only-show-errors && echo \"Image build started.\"', resourceId('Microsoft.VirtualMachineImages/imageTemplates', variables('aibTemplateName')))]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('aibManagedIdentityName'))]",
+                "[resourceId('Microsoft.VirtualMachineImages/imageTemplates', variables('aibTemplateName'))]"
               ]
             }
           ],
