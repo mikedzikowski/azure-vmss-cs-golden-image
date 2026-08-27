@@ -44,8 +44,8 @@ param sourceImageVersion string
 @description('Key Vault name containing CrowdStrike secrets')
 param keyVaultName string
 
-@description('Automatically start the image build after the Image Builder template is created (via a deployment script that invokes the Run action).')
-param startImageBuild bool = true
+@description('Optionally auto-start the image build after the template is created (via a deployment script). Default false - normally you click "Start build" on the image template in the portal, or run the Run action.')
+param startImageBuild bool = false
 
 @description('Value that changes each deployment so the build-trigger script re-runs. Pass utcNow() from the parent.')
 param buildTriggerTag string = ''

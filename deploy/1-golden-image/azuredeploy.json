@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.46.1.21595",
-      "templateHash": "1986407819682362159"
+      "templateHash": "3965971693617915291"
     }
   },
   "parameters": {
@@ -141,9 +141,9 @@
     },
     "startImageBuild": {
       "type": "bool",
-      "defaultValue": true,
+      "defaultValue": false,
       "metadata": {
-        "description": "Automatically start the image build after deployment (recommended). The build runs server-side for ~25-40 min after this deploys."
+        "description": "Optionally auto-start the image build after deployment. Default false - normally you click \"Start build\" on the image template in the portal (or run the Run action). Set true to build automatically (~25-40 min server-side)."
       }
     },
     "buildTriggerTag": {
@@ -624,7 +624,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.46.1.21595",
-              "templateHash": "5036253189917173601"
+              "templateHash": "14369948881555983778"
             }
           },
           "parameters": {
@@ -696,9 +696,9 @@
             },
             "startImageBuild": {
               "type": "bool",
-              "defaultValue": true,
+              "defaultValue": false,
               "metadata": {
-                "description": "Automatically start the image build after the Image Builder template is created (via a deployment script that invokes the Run action)."
+                "description": "Optionally auto-start the image build after the template is created (via a deployment script). Default false - normally you click \"Start build\" on the image template in the portal, or run the Run action."
               }
             },
             "buildTriggerTag": {

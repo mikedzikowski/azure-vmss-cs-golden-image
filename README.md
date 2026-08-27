@@ -41,21 +41,24 @@ You provide the CrowdStrike **API Client ID/Secret** (and cloud) as secure input
 
 This button opens a **guided form** (the portal's `CustomDeploymentBlade` renders `deploy/1-golden-image/uiFormDefinition.json`).
 
-Then **trigger the image build** (the button deploys the AIB *template*; this runs it — ~25–40 min):
+**Then start the image build.** Deploying only *creates* the Image Builder template — it doesn't build. Start it either way:
 
-```bash
-az resource invoke-action \
-  --resource-group <your-rg> \
-  --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-  --name crowdstrike-dev-aib-template \
-  --action Run
+- **Portal (easiest):** open the image template resource (`crowdstrike-dev-aib-template`) and click **Start build**.
+- **CLI:**
+  ```bash
+  az resource invoke-action \
+    --resource-group <your-rg> \
+    --resource-type Microsoft.VirtualMachineImages/imageTemplates \
+    --name crowdstrike-dev-aib-template \
+    --action Run
 
-# Watch until "Succeeded":
-az resource show -g <your-rg> \
-  --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-  --name crowdstrike-dev-aib-template \
-  --query "properties.lastRunStatus" -o json
-```
+  # Watch until "Succeeded" (~25-40 min):
+  az resource show -g <your-rg> \
+    --resource-type Microsoft.VirtualMachineImages/imageTemplates \
+    --name crowdstrike-dev-aib-template \
+    --query "properties.lastRunStatus" -o json
+  ```
+- **Fully automatic (optional):** set the `startImageBuild` parameter to `true` at deploy time — a bundled deployment script invokes the build for you.
 
 ### Step 2 — Deploy the VMSS from the golden image
 
