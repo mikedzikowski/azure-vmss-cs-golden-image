@@ -138,11 +138,10 @@
               "name": "sourceImageVersion",
               "type": "Microsoft.Common.DropDown",
               "label": "Version",
-              "defaultValue": "latest",
-              "toolTip": "Source image version. 'latest' always uses the newest published version; specific versions are pulled live from Azure.",
+              "toolTip": "Source image version (pulled live from Azure). Pick the newest for a fully patched base.",
               "constraints": {
                 "required": true,
-                "allowedValues": "[concat(parse('[{\"label\":\"latest\",\"value\":\"latest\"}]'), map(steps('sourceImage').versionsApi, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}'))))]"
+                "allowedValues": "[map(steps('sourceImage').versionsApi, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
               },
               "visible": true
             }
