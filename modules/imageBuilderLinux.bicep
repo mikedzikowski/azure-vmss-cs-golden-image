@@ -263,7 +263,10 @@ resource imageBuilderTemplate 'Microsoft.VirtualMachineImages/imageTemplates@202
     buildTimeoutInMinutes: 90
     vmProfile: {
       vmSize: 'Standard_D2s_v3'
-      osDiskSizeGB: 30
+      // 0 = use the source image's own OS disk size. A fixed size fails if the base image's
+      // disk is larger (e.g. RHEL 9-lvm-gen2 ships a 64 GB OS disk, Ubuntu 30 GB) with
+      // "specified disk size N GB is smaller than the corresponding disk in the VM image".
+      osDiskSizeGB: 0
       // Attach the user-assigned identity to the BUILD VM so the in-VM Shell customizer can
       // fetch an IMDS token and read Key Vault (verified via Microsoft Learn image-builder-json#identity).
       userAssignedIdentities: [

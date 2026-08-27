@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.46.1.21595",
-      "templateHash": "11698306556556279751"
+      "templateHash": "17993946896585931722"
     }
   },
   "parameters": {
@@ -618,7 +618,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.46.1.21595",
-              "templateHash": "8468997874824603430"
+              "templateHash": "5319830599636389761"
             }
           },
           "parameters": {
@@ -765,7 +765,7 @@
                 "buildTimeoutInMinutes": 90,
                 "vmProfile": {
                   "vmSize": "Standard_D2s_v3",
-                  "osDiskSizeGB": 30,
+                  "osDiskSizeGB": 0,
                   "userAssignedIdentities": [
                     "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('aibManagedIdentityName'))]"
                   ]

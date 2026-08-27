@@ -308,7 +308,9 @@ resource imageBuilderTemplate 'Microsoft.VirtualMachineImages/imageTemplates@202
     buildTimeoutInMinutes: 120 // Golden image builds can take time
     vmProfile: {
       vmSize: 'Standard_D4s_v3' // Sufficient for image building with CrowdStrike
-      osDiskSizeGB: 127
+      // 0 = use the source image's own OS disk size (avoids "specified disk size smaller
+      // than the corresponding disk in the VM image" if a base image's disk is larger).
+      osDiskSizeGB: 0
       // Attach the user-assigned identity to the BUILD VM so in-VM customizer scripts can
       // fetch an IMDS token and read Key Vault. Without this, IMDS returns
       // {"error":"invalid_request","error_description":"Identity not found"} and the build
