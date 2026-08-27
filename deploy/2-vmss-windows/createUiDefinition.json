@@ -59,51 +59,37 @@
         "label": "VMSS configuration",
         "elements": [
           {
-            "name": "keyVaultName",
-            "type": "Microsoft.Common.TextBox",
-            "label": "Key Vault name",
-            "toolTip": "The Key Vault created by Step 1 (shown in Step 1's deployment outputs). The VMSS user-assigned identity is granted read access to it.",
+            "name": "galleryImage",
+            "type": "Microsoft.Solutions.ResourceSelector",
+            "label": "Golden image",
+            "toolTip": "Select the CrowdStrike golden image definition built in Step 1 (any Compute Gallery / resource group you can read).",
+            "resourceType": "Microsoft.Compute/galleries/images",
             "constraints": {
-              "required": true,
-              "validations": [
-                {
-                  "regex": "^[a-zA-Z][a-zA-Z0-9-]{1,22}[a-zA-Z0-9]$",
-                  "message": "3-24 chars, start with a letter, alphanumeric/hyphen, no trailing hyphen."
-                }
-              ]
+              "required": true
             },
             "visible": true
+          },
+          {
+            "name": "versionsApi",
+            "type": "Microsoft.Solutions.ArmApiControl",
+            "condition": "[not(empty(steps('vmssConfig').galleryImage))]",
+            "request": {
+              "method": "GET",
+              "path": "[concat(steps('vmssConfig').galleryImage.id, '/versions?api-version=2023-07-03')]"
+            }
           },
           {
             "name": "imageVersion",
-            "type": "Microsoft.Common.TextBox",
+            "type": "Microsoft.Common.DropDown",
             "label": "Image version",
-            "defaultValue": "latest",
-            "toolTip": "Golden image version to deploy. Use 'latest' for the newest published version or pin an exact version.",
+            "defaultValue": "[last(map(steps('vmssConfig').versionsApi.value, (item) => item.name))]",
+            "filter": true,
+            "toolTip": "Golden image version (pulled live from the selected image). Defaults to newest.",
             "constraints": {
               "required": true,
-              "validations": [
-                {
-                  "regex": "^(latest|[0-9]+\\.[0-9]+\\.[0-9]+)$",
-                  "message": "Use 'latest' or an exact version like 20348.5499.260809."
-                }
-              ]
+              "allowedValues": "[map(steps('vmssConfig').versionsApi.value, (item) => parse(concat('{\"label\":\"', item.name, '\",\"value\":\"', item.name, '\"}')))]"
             },
-            "visible": true
-          },
-          {
-            "name": "imageDefinitionName",
-            "type": "Microsoft.Common.TextBox",
-            "label": "Image definition name",
-            "defaultValue": "CrowdStrike-Windows-2022",
-            "toolTip": "The image definition created by Step 1 (shown in Step 1's outputs as imageDefinitionName, e.g. CrowdStrike-Windows-2025). Must match exactly.",
-            "constraints": {
-              "required": true,
-              "validations": [
-                { "regex": "^[^\\s]{2,80}$", "message": "Enter the image definition name from Step 1 (no spaces)." }
-              ]
-            },
-            "visible": true
+            "visible": "[not(empty(steps('vmssConfig').galleryImage))]"
           },
           {
             "name": "vmSize",
@@ -140,9 +126,8 @@
       "location": "[location()]",
       "adminUsername": "[basics('adminUsername')]",
       "adminPassword": "[basics('adminPassword').password]",
-      "keyVaultName": "[steps('vmssConfig').keyVaultName]",
+      "imageDefinitionId": "[steps('vmssConfig').galleryImage.id]",
       "imageVersion": "[steps('vmssConfig').imageVersion]",
-      "imageDefinitionName": "[steps('vmssConfig').imageDefinitionName]",
       "vmSku": "[steps('vmssConfig').vmSize]",
       "instanceCount": "[int(steps('vmssConfig').instanceCount)]"
     }

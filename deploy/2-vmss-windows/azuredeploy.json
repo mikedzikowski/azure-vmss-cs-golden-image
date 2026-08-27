@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.46.1.21595",
-      "templateHash": "5790001125382773565"
+      "templateHash": "13214331994483731824"
     }
   },
   "parameters": {
@@ -64,18 +64,10 @@
         "description": "Local administrator password."
       }
     },
-    "galleryName": {
+    "imageDefinitionId": {
       "type": "string",
-      "defaultValue": "[format('{0}_{1}_{2}', parameters('projectName'), parameters('environment'), uniqueString(resourceGroup().id))]",
       "metadata": {
-        "description": "Azure Compute Gallery name from Step 1. Defaults to the same per-resource-group unique name Step 1 uses (so a same-RG deploy resolves automatically); override with the galleryName from Step 1 outputs for cross-RG."
-      }
-    },
-    "imageDefinitionName": {
-      "type": "string",
-      "defaultValue": "CrowdStrike-Windows-2022",
-      "metadata": {
-        "description": "Image definition name from Step 1."
+        "description": "Full resource ID of the gallery image DEFINITION from Step 1 (shown in Step 1 outputs as imageDefinitionId, or selected via the image picker)."
       }
     },
     "imageVersion": {
@@ -83,12 +75,6 @@
       "defaultValue": "latest",
       "metadata": {
         "description": "Image version to deploy. Use \"latest\" for the newest published version, or an exact version like 1.0.0 / 20348.x.x."
-      }
-    },
-    "keyVaultName": {
-      "type": "string",
-      "metadata": {
-        "description": "Name of the EXISTING Key Vault (grants the VMSS user-assigned identity read access for future use)."
       }
     },
     "vnetAddressPrefix": {
@@ -369,20 +355,14 @@
           "adminPassword": {
             "value": "[parameters('adminPassword')]"
           },
-          "galleryName": {
-            "value": "[parameters('galleryName')]"
-          },
-          "imageDefinitionName": {
-            "value": "[parameters('imageDefinitionName')]"
+          "imageDefinitionId": {
+            "value": "[parameters('imageDefinitionId')]"
           },
           "imageVersion": {
             "value": "[parameters('imageVersion')]"
           },
           "subnetId": {
             "value": "[reference(resourceId('Microsoft.Resources/deployments', 'networking-deployment'), '2025-04-01').outputs.subnetId.value]"
-          },
-          "keyVaultName": {
-            "value": "[parameters('keyVaultName')]"
           }
         },
         "template": {
@@ -392,7 +372,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.46.1.21595",
-              "templateHash": "16015051059162758432"
+              "templateHash": "8595236069861621667"
             }
           },
           "parameters": {
@@ -438,16 +418,10 @@
                 "description": "Admin password"
               }
             },
-            "galleryName": {
+            "imageDefinitionId": {
               "type": "string",
               "metadata": {
-                "description": "Azure Compute Gallery name"
-              }
-            },
-            "imageDefinitionName": {
-              "type": "string",
-              "metadata": {
-                "description": "Image definition name"
+                "description": "Full resource ID of the gallery image DEFINITION to deploy (from Step 1 output / the image picker)."
               }
             },
             "imageVersion": {
@@ -460,12 +434,6 @@
               "type": "string",
               "metadata": {
                 "description": "Subnet resource ID"
-              }
-            },
-            "keyVaultName": {
-              "type": "string",
-              "metadata": {
-                "description": "Key Vault name"
               }
             },
             "platformFaultDomainCount": {
@@ -482,10 +450,7 @@
             "loadBalancerName": "[format('{0}-lb', parameters('namePrefix'))]",
             "publicIpName": "[format('{0}-pip', parameters('namePrefix'))]",
             "backendPoolName": "[format('{0}-backend-pool', parameters('namePrefix'))]",
-            "galleryImageBaseId": "[format('{0}/resourceGroups/{1}/providers/Microsoft.Compute/galleries/{2}/images/{3}', subscription().id, resourceGroup().name, variables('sanitizedGalleryName'), parameters('imageDefinitionName'))]",
-            "galleryImageId": "[if(equals(toLower(parameters('imageVersion')), 'latest'), variables('galleryImageBaseId'), format('{0}/versions/{1}', variables('galleryImageBaseId'), parameters('imageVersion')))]",
-            "sanitizedGalleryName": "[replace(replace(parameters('galleryName'), '_', ''), '-', '')]",
-            "keyVaultSecretsUserRoleId": "4633458b-17de-408a-b874-0445c86b69e6"
+            "galleryImageId": "[if(equals(toLower(parameters('imageVersion')), 'latest'), parameters('imageDefinitionId'), format('{0}/versions/{1}', parameters('imageDefinitionId'), parameters('imageVersion')))]"
           },
           "resources": [
             {
@@ -658,20 +623,6 @@
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Network/loadBalancers', variables('loadBalancerName'))]",
-                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('vmssIdentityName'))]"
-              ]
-            },
-            {
-              "type": "Microsoft.Authorization/roleAssignments",
-              "apiVersion": "2022-04-01",
-              "scope": "[resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName'))]",
-              "name": "[guid(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('vmssIdentityName')), resourceId('Microsoft.KeyVault/vaults', parameters('keyVaultName')), variables('keyVaultSecretsUserRoleId'))]",
-              "properties": {
-                "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', variables('keyVaultSecretsUserRoleId'))]",
-                "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('vmssIdentityName')), '2023-01-31').principalId]",
-                "principalType": "ServicePrincipal"
-              },
-              "dependsOn": [
                 "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('vmssIdentityName'))]"
               ]
             }

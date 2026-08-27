@@ -37,17 +37,11 @@ param adminUsername string = 'azureuser'
 @secure()
 param adminPassword string
 
-@description('Azure Compute Gallery name from Step 1. Defaults to the same per-resource-group unique name Step 1 uses (so a same-RG deploy resolves automatically); override with the galleryName from Step 1 outputs for cross-RG.')
-param galleryName string = '${projectName}_${environment}_${uniqueString(resourceGroup().id)}'
-
-@description('Image definition name from Step 1.')
-param imageDefinitionName string = 'CrowdStrike-Windows-2022'
+@description('Full resource ID of the gallery image DEFINITION from Step 1 (shown in Step 1 outputs as imageDefinitionId, or selected via the image picker).')
+param imageDefinitionId string
 
 @description('Image version to deploy. Use "latest" for the newest published version, or an exact version like 1.0.0 / 20348.x.x.')
 param imageVersion string = 'latest'
-
-@description('Name of the EXISTING Key Vault (grants the VMSS user-assigned identity read access for future use).')
-param keyVaultName string
 
 @description('Virtual network address prefix.')
 param vnetAddressPrefix string = '10.0.0.0/16'
@@ -88,11 +82,9 @@ module vmss '../../modules/vmss.bicep' = {
     instanceCount: instanceCount
     adminUsername: adminUsername
     adminPassword: adminPassword
-    galleryName: galleryName
-    imageDefinitionName: imageDefinitionName
+    imageDefinitionId: imageDefinitionId
     imageVersion: imageVersion
     subnetId: networking.outputs.subnetId
-    keyVaultName: keyVaultName
   }
 }
 

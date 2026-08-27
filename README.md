@@ -65,7 +65,7 @@ az resource show -g <your-rg> \
 
 ### Step 2 — Deploy the VMSS
 
-Deploys networking + a Flexible VMSS from the Step 1 image. Provide the **Key Vault name** and **Image definition name** from **Step 1's outputs**, plus a local **admin username / password**, **VM size**, and **instance count**. Use `imageVersion = latest` or pin an exact version.
+Deploys networking + a Flexible VMSS from the Step 1 image. **Pick the golden image** from any Compute Gallery you can read (the form's image selector), choose a **version**, and set the local **admin username / password**, **VM size**, and **instance count**. No Key Vault or image names to type — the sensor's CID is already baked into the image.
 
 > Linux instances use password auth by default (mirroring Windows). For production, switch `modules/vmssLinux.bicep` to SSH keys.
 >
@@ -114,10 +114,10 @@ az deployment group create -g <your-rg> \
 
 # ...start the build (see Step 1) and wait for Succeeded, then:
 
-# Step 2 — VMSS from the image (use keyVaultName + imageDefinitionName from Step 1 outputs)
+# Step 2 — VMSS from the image (use imageDefinitionId from Step 1 outputs)
 az deployment group create -g <your-rg> \
   --template-file deploy/2-vmss-windows/main.bicep \
-  --parameters keyVaultName='<kv-from-step1>' imageDefinitionName='<def-from-step1>' \
+  --parameters imageDefinitionId='<imageDefinitionId-from-step1>' \
                adminPassword='<secure-password>' imageVersion='latest'
 ```
 
@@ -183,7 +183,7 @@ scripts/                    # Reference PowerShell (install / update runbooks)
 ## Security notes
 
 - **No secrets in this repo.** Step 1 takes them as `@secure()` inputs and writes them to a new Key Vault; `parameters.json` holds placeholders only.
-- All secret access uses **managed identities** (AIB build VM and VMSS) — no credentials on disk.
+- The **AIB build VM** reads the CrowdStrike secrets from Key Vault via a managed identity — no credentials on disk. The VMSS needs no secret access at runtime (the CID is baked into the image).
 - Secrets are written via ARM (management plane), so the deployer needs only Contributor/Owner — no data-plane role to seed them. The AIB identity is granted *Key Vault Secrets User* to read them at build time.
 - NSG is least-privilege; remote-access ports aren't opened unless you pass a source IP range.
 - [`.gitignore`](.gitignore) excludes local Claude settings, `.remember/`, and `*.local.json` overrides.

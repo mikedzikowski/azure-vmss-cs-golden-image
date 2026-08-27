@@ -34,20 +34,14 @@ param adminUsername string
 @secure()
 param adminPassword string
 
-@description('Azure Compute Gallery name')
-param galleryName string
-
-@description('Image definition name')
-param imageDefinitionName string
+@description('Full resource ID of the gallery image DEFINITION to deploy (from Step 1 output / the image picker).')
+param imageDefinitionId string
 
 @description('Image version (use "latest" for most recent)')
 param imageVersion string
 
 @description('Subnet resource ID')
 param subnetId string
-
-@description('Key Vault name')
-param keyVaultName string
 
 @description('Platform fault domain count. Required for Flexible orchestration. 1 gives maximum spreading and broadest VM-size compatibility.')
 param platformFaultDomainCount int = 1
@@ -64,10 +58,8 @@ var backendPoolName = '${namePrefix}-backend-pool'
 
 // Image reference id. Azure Compute Gallery resolves the image DEFINITION id (no version)
 // to the newest version at deploy time; a specific version pins to it. So when
-// imageVersion == 'latest' we omit the /versions/<v> segment.
-var galleryImageBaseId = '${subscription().id}/resourceGroups/${resourceGroup().name}/providers/Microsoft.Compute/galleries/${sanitizedGalleryName}/images/${imageDefinitionName}'
-var galleryImageId = toLower(imageVersion) == 'latest' ? galleryImageBaseId : '${galleryImageBaseId}/versions/${imageVersion}'
-var sanitizedGalleryName = replace(replace(galleryName, '_', ''), '-', '')
+// imageVersion == 'latest' we use the definition id directly.
+var galleryImageId = toLower(imageVersion) == 'latest' ? imageDefinitionId : '${imageDefinitionId}/versions/${imageVersion}'
 
 // =============================================================================
 // PUBLIC IP FOR LOAD BALANCER
@@ -262,27 +254,6 @@ resource vmScaleSet 'Microsoft.Compute/virtualMachineScaleSets@2023-09-01' = {
   dependsOn: [
     loadBalancer
   ]
-}
-
-// =============================================================================
-// ROLE ASSIGNMENT FOR KEY VAULT ACCESS
-// =============================================================================
-
-// Key Vault Secrets User role definition ID
-var keyVaultSecretsUserRoleId = '4633458b-17de-408a-b874-0445c86b69e6'
-
-resource keyVaultRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(vmssIdentity.id, keyVault.id, keyVaultSecretsUserRoleId)
-  scope: keyVault
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', keyVaultSecretsUserRoleId)
-    principalId: vmssIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
-  name: keyVaultName
 }
 
 // =============================================================================
